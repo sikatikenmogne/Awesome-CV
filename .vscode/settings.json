@@ -1,3 +1,52 @@
 {
-    "iis.configDir": ""
+  "latex-workshop.latex.tools": [
+    {
+      "name": "make-all",
+      "command": "make",
+      "args": ["all"]
+    },
+    {
+      "name": "make-fr",
+      "command": "make", 
+      "args": ["fr"]
+    },
+    {
+      "name": "make-en",
+      "command": "make",
+      "args": ["en"]
+    }
+  ],
+
+  "latex-workshop.latex.recipes": [
+    {
+      "name": "Make All (FR + EN)",
+      "tools": ["make-all"]
+    },
+    {
+      "name": "Make French Only", 
+      "tools": ["make-fr"]
+    },
+    {
+      "name": "Make English Only",
+      "tools": ["make-en"] 
+    }
+  ],
+
+  "latex-workshop.latex.recipe.default": "Make All (FR + EN)",
+  
+  "latex-workshop.view.pdf.viewer": "tab",
+  
+  "latex-workshop.latex.outDir": "./custom/output",
+  
+  "files.associations": {
+    "*.tex": "latex",
+    "*.cls": "latex",
+    "Makefile": "makefile",
+    "*.mk": "makefile"
+  },
+
+  "files.exclude": {
+    "**/custom/build": true
+  },
+  "iis.configDir": ""
 }

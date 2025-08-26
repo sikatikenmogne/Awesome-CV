@@ -1,0 +1,70 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build All Documents",
+            "type": "shell",
+            "command": "make",
+            "args": ["all"],
+            "group": {
+                "kind": "build", 
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build French Documents",
+            "type": "shell",
+            "command": "make",
+            "args": ["fr"],
+            "group": "build"
+        },
+        {
+            "label": "Build English Documents", 
+            "type": "shell",
+            "command": "make", 
+            "args": ["en"],
+            "group": "build"
+        },
+        {
+            "label": "Build All Cover Letters",
+            "type": "shell",
+            "command": "make",
+            "args": ["coverletters"],
+            "group": "build"
+        },
+        {
+            "label": "Build ZENITY Cover Letter",
+            "type": "shell",
+            "command": "make",
+            "args": ["coverletter-ZENITY"],
+            "group": "build"
+        },
+        {
+            "label": "Build STARTUP Cover Letter",
+            "type": "shell",
+            "command": "make",
+            "args": ["coverletter-STARTUP"],
+            "group": "build"
+        },
+        {
+            "label": "Clean Build Files",
+            "type": "shell",
+            "command": "make",
+            "args": ["clean"],
+            "group": "build"
+        },
+        {
+            "label": "List Generated PDFs",
+            "type": "shell",
+            "command": "make",
+            "args": ["list-outputs"],
+            "group": "build"
+        }
+    ]
+}

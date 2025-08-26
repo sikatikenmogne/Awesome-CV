@@ -1,0 +1,156 @@
+%!TEX TS-program = xelatex
+%!TEX encoding = UTF-8 Unicode
+% Awesome CV LaTeX Template for Cover Letter
+%
+% This template has been downloaded from:
+% https://github.com/posquit0/Awesome-CV
+%
+% Authors:
+% Claud D. Park <posquit0.bj@gmail.com>
+% Lars Richter <mail@ayeks.de>
+%
+% Template license:
+% CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
+%
+
+
+%-------------------------------------------------------------------------------
+% CONFIGURATIONS
+%-------------------------------------------------------------------------------
+% A4 paper size by default, use 'letterpaper' for US letter
+\documentclass[11pt, a4paper]{awesome-cv}
+
+% Configure page margins with geometry
+\geometry{left=1cm, top=.8cm, right=1cm, bottom=2.25cm, footskip=.25cm}
+
+% Specify the location of the included fonts
+\fontdir[fonts/]
+
+% Color for highlights
+% Awesome Colors: awesome-emerald, awesome-skyblue, awesome-red, awesome-pink, awesome-orange
+%                 awesome-nephritis, awesome-concrete, awesome-darknight
+\colorlet{awesome}{awesome-skyblue}
+% Uncomment if you would like to specify your own color
+% \definecolor{awesome}{HTML}{CA63A8}
+
+% Colors for text
+% Uncomment if you would like to specify your own color
+\definecolor{darktext}{HTML}{414141}
+\definecolor{text}{HTML}{333333}
+\definecolor{graytext}{HTML}{5D5D5D}
+\definecolor{lighttext}{HTML}{999999}
+
+% Set false if you don't want to highlight section with awesome color
+\setbool{acvSectionColorHighlight}{true}
+
+% If you would like to change the social information separator from a pipe (|) to something else
+\renewcommand{\acvHeaderSocialSep}{\quad\textbar\quad}
+
+% Configuration pour les dates en français
+\usepackage[french]{babel}
+\usepackage[useregional]{datetime2}
+
+% Configuration de l'interligne à 1,5
+\usepackage{setspace}
+\setstretch{1}  % Définit l'interligne à 1,15
+% Configuration pour l'indentation des paragraphes
+
+%-------------------------------------------------------------------------------
+%	PERSONAL INFORMATION
+%	Comment any of the lines below if they are not required
+%-------------------------------------------------------------------------------
+% Available options: circle|rectangle,edge/noedge,left/right
+% \photo[circle,noedge,left]{./profile}
+\name{\textbf{Samuel}}{SIKATI KENMOGNE}
+\position{Ingénieur logiciel{\enskip\cdotp\enskip}Développeur web fullstack}
+\address{Yaoundé ~·~ Douala, Cameroun}
+
+\mobile{(+237) 657407989}
+\email{sikatikenmogne@gmail.com}
+\homepage{linktr.ee/samuelsikati}
+\github{sikatikenmogne}
+\linkedin{samuel-sikati-kenmogne-57953a1b7}
+% \gitlab{gitlab-id}
+% \stackoverflow{SO-id}{SO-name}
+% \twitter{@twit}
+% \skype{skype-id}
+% \reddit{reddit-id}
+% \medium{madium-id}
+% \googlescholar{googlescholar-id}{name-to-display}
+%% \firstname and \lastname will be used
+% \googlescholar{googlescholar-id}{}
+% \extrainfo{extra informations}
+
+% \quote{``Be the change that you want to see in the world."}
+
+
+%-------------------------------------------------------------------------------
+%	LETTER INFORMATION
+%	All of the below lines must be filled out
+%-------------------------------------------------------------------------------
+% The company being applied to
+\recipient
+  {\`A l’attention du Responsable du Recrutement}
+  {PAWK SARL\\Douala, Logpom\\Cameroun}
+% The date on the letter, default is the date of compilation
+\letterdate{Douala, le \today.}
+% The title of the letter
+% \lettertitle{Demande de stage de fin d'études}
+
+% \vspace{3cm} % Add vertical space here
+% How the letter is opened
+% \letteropening{Madame, Monsieur,}
+% How the letter is closed
+% \letterclosing{Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.}
+% Any enclosures with the letter
+\letterenclosure[Pièces Jointes]{Curriculum Vitae}
+
+
+%-------------------------------------------------------------------------------
+\begin{document}
+
+% Print the header with above personal informations
+% Give optional argument to change alignment(C: center, L: left, R: right)
+\makecvheader[L]
+
+% Print the footer with 3 arguments(<left>, <center>, <right>)
+% Leave any of these blank if they are not needed
+% \makecvfooter {\today} {SIKATI KENMOGNE Samuel~~~·~~~Lettre de motivation} {}
+\makecvfooterqrlinksize[1.5cm]{}{SIKATI KENMOGNE Samuel~~~·~~~Lettre de motivation}{https://linktr.ee/samuelsikati}{samuelsikati.png}
+
+% Print the title with above letter informations
+\makelettertitle
+
+%-------------------------------------------------------------------------------
+%	LETTER CONTENT
+%-------------------------------------------------------------------------------
+\begin{cvletter}
+
+\lettersection{Objet : Candidature spontanée pour un poste de stagiaire professionnel}
+
+
+Madame, Monsieur,
+
+\setlength{\parindent}{2em}  % Définit la taille de l'indentation (ajustable)
+
+\indent Titulaire d'un Master en Ingénierie Informatique spécialisé en Génie Logiciel de l'Institut UCAC-ICAM et d'une Licence en Informatique de l'Institut Africain d'Informatique (IAI), j'ai l'honneur de solliciter un stage professionnel au sein de votre entreprise.
+
+\indent En effet, votre société s'impose comme un leader incontournable du Digital Testing et des tests automatisés au Cameroun depuis 2010. Votre excellence dans l'assurance qualité et l'automatisation des processus de validation, renforcée par votre partenariat stratégique avec Zenity et vos collaborations de prestige avec SEPHORA, AIR FRANCE et CARREFOUR, témoigne d'un savoir-faire technique exceptionnel. Cette philosophie d'entreprise axée sur l'innovation, la montée en compétences et l'agilité opérationnelle correspond parfaitement à ma vision du génie logiciel et à mes aspirations professionnelles d'excellence.
+
+
+\indent D'autre part, mon parcours m'a permis d'acquérir des compétences diversifiées. Lors de mon stage chez Société Générale Cameroun, j'ai conçu une solution de gestion des anomalies opérationnelles bancaires. De même, mes missions d'optimisation des processus de contrôle qualité chez PERENCO RIO DEL REY m'ont sensibilisé à l'importance cruciale des tests en environnement industriel.
+
+\indent De plus, mes compétences techniques incluant, la maîtrise des technologies web full-stack (.NET, Spring boot, Django, JavaScript/TypeScript, React), l'expertise en bases de données (SQL Server, PostgreSQL) et une expérience en DevOps (Docker, GitLab, Git). Ma certification Scrum Fundamentals et ma sensibilisation au Test-Driven Development constituent des atouts supplémentaires pour m'intégrer dans vos équipes.
+
+\indent Enfin, ce stage représenterait pour moi une opportunité unique d'appliquer mes connaissances en architecture logicielle et API RESTful au service de vos solutions de test frontend, d'automatisation et de CI/CD. Mon profil technique, associé à ma motivation d'apprendre, me permettrait d'apporter une contribution significative à vos projets tout en perfectionnant mon expertise dans le Génie logiciel et le Digital Testing en particulier.
+
+Dans l'attente d'une suite favorable, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.
+
+\end{cvletter}
+
+%-------------------------------------------------------------------------------
+% Print the signature and enclosures with above letter informations
+\makeletterclosing
+
+
+\end{document}

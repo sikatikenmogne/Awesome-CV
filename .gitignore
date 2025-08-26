@@ -21,3 +21,24 @@
 ## Mac OS X metadata files:
 *.DS_Store
 
+# Awesome-CV Build Files
+custom/build/
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+
+# Conserver les PDFs finaux mais ignorer les temporaires  
+!custom/output/CV-*.pdf
+!custom/output/Resume-*.pdf
+custom/output/*.aux
+custom/output/*.log
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# VS Code
+.vscode/settings.json.backup
