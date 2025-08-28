@@ -1,0 +1,128 @@
+name: Build and Release CV
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'      # Version tags (v1.0.0, v1.2.3, etc.)
+      - 'release-*'   # Release tags (release-2025-08, etc.)
+
+env:
+  CV_FR_OUTPUT: CV-Samuel-SIKATI-KENMOGNE-Ingenieur-Logiciel-FR.pdf
+  CV_EN_OUTPUT: CV-Samuel-SIKATI-KENMOGNE-Software-Engineer-EN.pdf
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # Checkout du code
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    # Setup Python 
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    
+    # Setup LaTeX
+    - name: Setup LaTeX
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y texlive-xetex texlive-fonts-recommended texlive-latex-extra
+    
+    # Compilation des CV avec le script Python
+    - name: Build CVs
+      run: |
+        echo "Compilation des CV avec Python..."
+        python build.py all
+    
+    # Verification des fichiers generes
+    - name: Verify generated files
+      run: |
+        echo "Verification des fichiers generes..."
+        ls -la custom/output/fr/ custom/output/en/
+        
+        # Verifier CV francais
+        if [ ! -f "custom/output/fr/${{ env.CV_FR_OUTPUT }}" ]; then
+          echo "ERROR: CV francais non genere"
+          exit 1
+        fi
+        
+        # Verifier CV anglais
+        if [ ! -f "custom/output/en/${{ env.CV_EN_OUTPUT }}" ]; then
+          echo "ERROR: CV anglais non genere"  
+          exit 1
+        fi
+        
+        echo "SUCCESS: Tous les CV ont ete generes"
+    
+    # Recuperer le nom du tag
+    - name: Get tag name
+      id: tag
+      run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+    
+    # Creer la release GitHub
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.tag.outputs.tag }}
+        release_name: CV Release ${{ steps.tag.outputs.tag }}
+        body: |
+          Nouvelle version du CV de Samuel SIKATI KENMOGNE
+          
+          Cette release contient les CV compiles en francais et en anglais.
+          
+          **Fichiers inclus:**
+          - ${{ env.CV_FR_OUTPUT }} (Version francaise)
+          - ${{ env.CV_EN_OUTPUT }} (Version anglaise)
+          
+          **Informations:**
+          - Version: ${{ steps.tag.outputs.tag }}
+          - Date: $(date +'%Y-%m-%d %H:%M:%S')
+          - Compilation: XeLaTeX via Python
+          
+          ---
+          *Genere automatiquement via GitHub Actions*
+        draft: false
+        prerelease: false
+    
+    # Upload CV francais
+    - name: Upload French CV
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: custom/output/fr/${{ env.CV_FR_OUTPUT }}
+        asset_name: ${{ env.CV_FR_OUTPUT }}
+        asset_content_type: application/pdf
+    
+    # Upload CV anglais
+    - name: Upload English CV
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: custom/output/en/${{ env.CV_EN_OUTPUT }}
+        asset_name: ${{ env.CV_EN_OUTPUT }}
+        asset_content_type: application/pdf
+    
+    # Résumé final
+    - name: Summary
+      run: |
+        echo "## Compilation reussie" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Fichiers generes:**" >> $GITHUB_STEP_SUMMARY
+        echo "- CV Francais: \`${{ env.CV_FR_OUTPUT }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- CV Anglais: \`${{ env.CV_EN_OUTPUT }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Tag:** \`${{ steps.tag.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Les CV sont maintenant disponibles dans les assets de la release!"

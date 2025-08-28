@@ -1,0 +1,46 @@
+{
+  "project": {
+    "name": "CV-Samuel-SIKATI-KENMOGNE",
+    "author": "Samuel SIKATI KENMOGNE",
+    "version_format": "v%Y.%m.%d"
+  },
+  "compilation": {
+    "latex_compiler": "xelatex",
+    "latex_flags": [
+      "-synctex=1",
+      "-interaction=nonstopmode", 
+      "-file-line-error"
+    ],
+    "files": {
+      "cv_fr": {
+        "source": "custom/fr/resume-fr.tex",
+        "output_dir": "custom/output/fr",
+        "output_name": "CV-Samuel-SIKATI-KENMOGNE-Ingenieur-Logiciel-FR.pdf"
+      },
+      "cv_en": {
+        "source": "custom/en/resume-en.tex", 
+        "output_dir": "custom/output/en",
+        "output_name": "CV-Samuel-SIKATI-KENMOGNE-Software-Engineer-EN.pdf"
+      }
+    },
+    "additional_files": [
+      {
+        "name": "cover_letter_fr",
+        "source": "custom/fr/coverletter/coverletter.tex",
+        "output_dir": "custom/output/fr",
+        "output_name": "Lettre-Motivation-Samuel-SIKATI-KENMOGNE-FR.pdf",
+        "enabled": false
+      },
+      {
+        "name": "cover_letter_en",
+        "source": "custom/en/coverletter/coverletter.tex",
+        "output_dir": "custom/output/en",
+        "output_name": "Cover-Letter-Samuel-SIKATI-KENMOGNE-EN.pdf",
+        "enabled": false
+      }
+    ]
+  },
+  "github": {
+    "tag_patterns": ["v*.*.*", "release-*"]
+  }
+}

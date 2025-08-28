@@ -93,8 +93,13 @@
 % Solves issues Warning: File `cv.out' has changed
 \RequirePackage{bookmark}
 
-\RequirePackage{tikz}
+% QR Overlay required packages
+% Required packages
+\RequirePackage{eso-pic}
+\RequirePackage{xkeyval}
+\RequirePackage{hyperref}
 \RequirePackage{graphicx}
+\RequirePackage{calc}
 
 %-------------------------------------------------------------------------------
 %                Configuration for directory locations
@@ -854,4 +859,74 @@
       \\\\\\
       \letterenclosurestyle{\@letterenclname: \@letterenclosure} \\
     }
+}
+
+%-------------------------------------------------------------------------------
+% QR CODE OVERLAY - VERSION SANS SAUT DE LIGNE
+% Solution robuste utilisant eso-pic
+%-------------------------------------------------------------------------------
+
+
+% Define keys for optional parameters
+\define@key{qroverlay}{x}{\def\qr@x{#1}}
+\define@key{qroverlay}{y}{\def\qr@y{#1}}
+\define@key{qroverlay}{size}{\def\qr@size{#1}}
+\define@key{qroverlay}{text}{\def\qr@text{#1}}
+\define@key{qroverlay}{textsize}{\def\qr@textsize{#1}}
+\define@key{qroverlay}{textcolor}{\def\qr@textcolor{#1}}
+
+% Set default values
+\def\qr@x{0.5\paperwidth}           
+\def\qr@y{0.3\paperheight}          
+\def\qr@size{0.15\textwidth}        
+\def\qr@text{}                      
+\def\qr@textsize{\normalsize}       
+\def\qr@textcolor{black}            
+
+% Main command using eso-pic (no line breaks)
+\newcommand{\qroverlay}[3][]{%
+    \setkeys{qroverlay}{#1}%
+    \def\qr@imagepath{#2}%
+    \def\qr@url{#3}%
+    \AddToShipoutPictureBG*{%
+        \AtPageUpperLeft{%
+            \raisebox{-\qr@y}{%
+                \makebox[\paperwidth][r]{%
+                    \makebox[\qr@x][l]{%
+                        \begin{minipage}{\qr@size}
+                            \centering
+                            \href{\qr@url}{\includegraphics[width=\qr@size]{\qr@imagepath}}%
+                            \ifx\qr@text\@empty\else
+                                \\[0.3cm]%
+                                {\qr@textsize\color{\qr@textcolor}\qr@text}%
+                            \fi
+                        \end{minipage}%
+                    }%
+                }%
+            }%
+        }%
+    }%
+}
+
+% Alternative simple positioning command
+\newcommand{\qrposition}[5]{%
+    % #1=image, #2=url, #3=x, #4=y, #5=size
+    \AddToShipoutPictureBG*{%
+        \AtPageUpperLeft{%
+            \put(\LenToUnit{#3},\LenToUnit{-#4}){%
+                \href{#2}{\includegraphics[width=#5]{#1}}%
+            }%
+        }%
+    }%
+}
+
+% Quick command for CV footer QR
+\newcommand{\qrfooter}[2]{%
+    \qroverlay[
+        x=0.88\paperwidth,
+        y=0.12\paperheight,
+        size=2cm,
+        text={\footnotesize Scannez pour plus d'infos},
+        textcolor=gray
+    ]{#1}{#2}%
 }
