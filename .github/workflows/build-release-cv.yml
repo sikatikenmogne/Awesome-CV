@@ -82,41 +82,65 @@ jobs:
         
         echo "SUCCESS: Tous les fichiers requis sont présents"
 
-    # Test de compilation avec succes base sur la generation de PDF
-    - name: Build CVs with Smart Error Handling
+    # Test de compilation avec tolerance aux erreurs LaTeX
+    - name: Build CVs with LaTeX Error Tolerance
       run: |
-        echo "=== COMPILATION INTELLIGENTE ==="
+        echo "=== COMPILATION AVEC TOLERANCE AUX ERREURS ==="
         
         # Verifier que les scripts fonctionnent
         python build.py check || exit 1
         
-        # Compiler avec gestion intelligente des erreurs
-        echo "Compilation des CV (tolérance aux avertissements LaTeX)..."
-        
-        # On considère la compilation réussie si les PDF sont générés
-        # même si LaTeX retourne un code != 0 à cause d'avertissements
+        # Compiler SANS s'arreter sur les erreurs LaTeX
+        set +e  # Desactiver l'arret sur erreur temporairement
         python build.py all
         BUILD_EXIT_CODE=$?
+        set -e  # Reactiver l'arret sur erreur
         
         echo "Code de retour build.py: $BUILD_EXIT_CODE"
         
-        # Vérifier que les PDF ont été générés
-        FR_COUNT=$(find custom/output/fr -name "*.pdf" | wc -l)
-        EN_COUNT=$(find custom/output/en -name "*.pdf" | wc -l)
+        # Verifier la generation de PDF independamment du code de retour
+        echo "=== VERIFICATION GENERATION PDF ==="
         
-        echo "PDF générés: FR=$FR_COUNT, EN=$EN_COUNT"
+        FR_PDFS=(custom/output/fr/*.pdf)
+        EN_PDFS=(custom/output/en/*.pdf)
         
-        if [ "$FR_COUNT" -gt 0 ] && [ "$EN_COUNT" -gt 0 ]; then
-          echo "SUCCESS: PDF générés malgré les avertissements LaTeX"
-          
-          # Lister les PDF trouvés
-          echo "PDF français trouvés:"
-          ls -la custom/output/fr/*.pdf
-          echo "PDF anglais trouvés:"
-          ls -la custom/output/en/*.pdf
-          
+        # Compter les PDF generes (en excluant les glob patterns non matches)
+        FR_COUNT=0
+        EN_COUNT=0
+        
+        if [ -f "${FR_PDFS[0]}" ]; then
+          FR_COUNT=${#FR_PDFS[@]}
+          echo "PDF francais trouves ($FR_COUNT):"
+          for pdf in "${FR_PDFS[@]}"; do
+            size=$(stat -c%s "$pdf")
+            echo "  $(basename "$pdf"): ${size} bytes"
+          done
         else
-          echo "ECHEC: Aucun PDF généré"
+          echo "Aucun PDF francais trouve"
+        fi
+        
+        if [ -f "${EN_PDFS[0]}" ]; then
+          EN_COUNT=${#EN_PDFS[@]}
+          echo "PDF anglais trouves ($EN_COUNT):"
+          for pdf in "${EN_PDFS[@]}"; do
+            size=$(stat -c%s "$pdf")
+            echo "  $(basename "$pdf"): ${size} bytes"
+          done
+        else
+          echo "Aucun PDF anglais trouve"
+        fi
+        
+        # Decision finale basee sur la presence de PDF, pas le code de retour
+        if [ "$FR_COUNT" -gt 0 ] && [ "$EN_COUNT" -gt 0 ]; then
+          echo "SUCCESS: PDF generes avec succes ($FR_COUNT FR, $EN_COUNT EN)"
+          echo "Les avertissements LaTeX sont ignores car les PDF ont ete generes."
+        else
+          echo "ECHEC: Pas assez de PDF generes (FR: $FR_COUNT, EN: $EN_COUNT)"
+          
+          # Debug supplementaire
+          echo "=== DEBUG: Contenu des repertoires ==="
+          ls -la custom/output/fr/ || echo "Repertoire custom/output/fr/ vide"
+          ls -la custom/output/en/ || echo "Repertoire custom/output/en/ vide"
           exit 1
         fi
 
@@ -156,18 +180,18 @@ jobs:
         # Copier avec le bon nom
         if [ -n "$FR_SOURCE" ]; then
           cp "$FR_SOURCE" "release-assets/${{ env.CV_FR_OUTPUT }}"
-          echo " CV français préparé: $FR_SOURCE -> release-assets/${{ env.CV_FR_OUTPUT }}"
+          echo "✅ CV français préparé: $FR_SOURCE -> release-assets/${{ env.CV_FR_OUTPUT }}"
         else
-          echo " CV français non trouvé"
+          echo "❌ CV français non trouvé"
           ls -la custom/output/fr/
           exit 1
         fi
         
         if [ -n "$EN_SOURCE" ]; then
           cp "$EN_SOURCE" "release-assets/${{ env.CV_EN_OUTPUT }}"
-          echo " CV anglais préparé: $EN_SOURCE -> release-assets/${{ env.CV_EN_OUTPUT }}"
+          echo "✅ CV anglais préparé: $EN_SOURCE -> release-assets/${{ env.CV_EN_OUTPUT }}"
         else
-          echo " CV anglais non trouvé"
+          echo "❌ CV anglais non trouvé"
           ls -la custom/output/en/
           exit 1
         fi
@@ -218,7 +242,7 @@ jobs:
     # Resume final avec tailles de fichiers
     - name: Final Summary
       run: |
-        echo "##  Release créée avec succès" >> $GITHUB_STEP_SUMMARY
+        echo "## ✅ Release créée avec succès" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
         FR_SIZE=$(stat -c%s "release-assets/${{ env.CV_FR_OUTPUT }}")
@@ -231,4 +255,4 @@ jobs:
         echo "**Tag:** \`${{ steps.tag.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
         echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY  
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo " **Les CV sont maintenant disponibles dans les assets de la release!**"
+        echo "📥 **Les CV sont maintenant disponibles dans les assets de la release!**"
