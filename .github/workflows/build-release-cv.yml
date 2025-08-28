@@ -31,98 +31,166 @@ jobs:
     - name: Setup LaTeX
       run: |
         sudo apt-get update
-        sudo apt-get install -y texlive-xetex texlive-fonts-recommended texlive-latex-extra
-    
-    # Compilation des CV avec le script Python
-    - name: Build CVs
+        sudo apt-get install -y texlive-xetex texlive-fonts-recommended texlive-latex-extra texlive-luatex
+
+    # Verification des fichiers requis
+    - name: Verify Required Files
       run: |
-        echo "Compilation des CV avec Python..."
-        python build.py all
-    
-    # Verification des fichiers generes
-    - name: Verify generated files
-      run: |
-        echo "Verification des fichiers generes..."
-        ls -la custom/output/fr/ custom/output/en/
+        echo "=== VERIFICATION DES FICHIERS REQUIS ==="
         
-        # Verifier CV francais
-        if [ ! -f "custom/output/fr/${{ env.CV_FR_OUTPUT }}" ]; then
-          echo "ERROR: CV francais non genere"
+        # Liste des fichiers essentiels
+        REQUIRED_FILES=("config.json" "build.py" "custom/fr/resume-fr.tex" "custom/en/resume-en.tex")
+        MISSING_FILES=()
+        
+        # Verification de chaque fichier
+        for file in "${REQUIRED_FILES[@]}"; do
+          if [ -f "$file" ]; then
+            echo "OK: $file existe ($(stat -c%s "$file") bytes)"
+          else
+            echo "ERREUR: $file manquant"
+            MISSING_FILES+=("$file")
+          fi
+        done
+        
+        # Structure du repository
+        echo "=== STRUCTURE DU REPOSITORY ==="
+        find . -name "*.tex" -o -name "*.json" -o -name "*.py" -o -name "*.cls" | head -20
+        
+        # Verification du template awesome-cv
+        if [ -f "awesome-cv.cls" ]; then
+          echo "OK: Template awesome-cv.cls trouvé"
+        elif [ -f "../../awesome-cv.cls" ]; then
+          echo "OK: Template awesome-cv.cls trouvé dans le parent"
+        else
+          echo "ATTENTION: Template awesome-cv.cls non trouvé"
+          echo "Les fichiers CV doivent utiliser un template disponible"
+        fi
+        
+        # Verifier config.json
+        if [ -f "config.json" ]; then
+          echo "=== CONTENU CONFIG.JSON ==="
+          cat config.json
+          echo "=== FIN CONFIG.JSON ==="
+        fi
+        
+        # Echec si des fichiers manquent
+        if [ ${#MISSING_FILES[@]} -ne 0 ]; then
+          echo "ECHEC: Fichiers manquants: ${MISSING_FILES[*]}"
+          echo "Ajoutez ces fichiers à votre repository avant de créer une release"
           exit 1
         fi
         
-        # Verifier CV anglais
-        if [ ! -f "custom/output/en/${{ env.CV_EN_OUTPUT }}" ]; then
-          echo "ERROR: CV anglais non genere"  
+        echo "SUCCESS: Tous les fichiers requis sont présents"
+
+    # Test de compilation avec debug
+    - name: Build CVs with Debug
+      run: |
+        echo "=== DEBUT COMPILATION ==="
+        
+        # Verifier que python build.py fonctionne
+        if ! python build.py check; then
+          echo "ERREUR: Verification build.py échouée"
           exit 1
         fi
         
-        echo "SUCCESS: Tous les CV ont ete generes"
-    
+        # Compilation avec debug en cas d'echec
+        if python build.py all; then
+          echo "SUCCESS: Compilation réussie"
+        else
+          echo "ECHEC: Compilation échouée, lancement du debug..."
+          echo "=== DEBUG CV FRANCAIS ==="
+          python build.py debug cv_fr || true
+          echo "=== DEBUG CV ANGLAIS ==="
+          python build.py debug cv_en || true
+          echo "=== FIN DEBUG ==="
+          exit 1
+        fi
+
+    # Verification des fichiers generes avec details
+    - name: Verify Generated Files
+      run: |
+        echo "=== VERIFICATION FICHIERS GENERES ==="
+        
+        # Lister tous les PDF generes
+        find custom/output -name "*.pdf" -exec ls -la {} \; || echo "Aucun PDF trouve dans custom/output"
+        
+        # Verifier les fichiers specifiques
+        FR_FILE="custom/output/fr/${{ env.CV_FR_OUTPUT }}"
+        EN_FILE="custom/output/en/${{ env.CV_EN_OUTPUT }}"
+        
+        if [ -f "$FR_FILE" ]; then
+          FR_SIZE=$(stat -c%s "$FR_FILE")
+          echo "OK: CV français généré ($FR_SIZE bytes): $FR_FILE"
+        else
+          echo "ERREUR: CV français manquant: $FR_FILE"
+          echo "Contenu du dossier custom/output/fr/:"
+          ls -la custom/output/fr/ || echo "Dossier custom/output/fr/ inexistant"
+          exit 1
+        fi
+        
+        if [ -f "$EN_FILE" ]; then
+          EN_SIZE=$(stat -c%s "$EN_FILE")
+          echo "OK: CV anglais généré ($EN_SIZE bytes): $EN_FILE"
+        else
+          echo "ERREUR: CV anglais manquant: $EN_FILE"
+          echo "Contenu du dossier custom/output/en/:"
+          ls -la custom/output/en/ || echo "Dossier custom/output/en/ inexistant"
+          exit 1
+        fi
+        
+        echo "SUCCESS: Tous les CV générés avec succès"
+
     # Recuperer le nom du tag
     - name: Get tag name
       id: tag
       run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
-    
-    # Creer la release GitHub
+
+    # Creer la release avec les nouvelles actions
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ steps.tag.outputs.tag }}
-        release_name: CV Release ${{ steps.tag.outputs.tag }}
+        name: CV Release ${{ steps.tag.outputs.tag }}
         body: |
           Nouvelle version du CV de Samuel SIKATI KENMOGNE
           
-          Cette release contient les CV compiles en francais et en anglais.
+          Cette release contient les CV compilés en français et en anglais.
           
           **Fichiers inclus:**
-          - ${{ env.CV_FR_OUTPUT }} (Version francaise)
+          - ${{ env.CV_FR_OUTPUT }} (Version française)
           - ${{ env.CV_EN_OUTPUT }} (Version anglaise)
           
           **Informations:**
           - Version: ${{ steps.tag.outputs.tag }}
-          - Date: $(date +'%Y-%m-%d %H:%M:%S')
-          - Compilation: XeLaTeX via Python
+          - Date de compilation: ${{ github.event.head_commit.timestamp }}
+          - Compilateur: XeLaTeX via Python
+          - Commit: ${{ github.sha }}
           
           ---
-          *Genere automatiquement via GitHub Actions*
+          *Généré automatiquement via GitHub Actions*
+        files: |
+          custom/output/fr/${{ env.CV_FR_OUTPUT }}
+          custom/output/en/${{ env.CV_EN_OUTPUT }}
         draft: false
         prerelease: false
-    
-    # Upload CV francais
-    - name: Upload French CV
-      uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: custom/output/fr/${{ env.CV_FR_OUTPUT }}
-        asset_name: ${{ env.CV_FR_OUTPUT }}
-        asset_content_type: application/pdf
-    
-    # Upload CV anglais
-    - name: Upload English CV
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: custom/output/en/${{ env.CV_EN_OUTPUT }}
-        asset_name: ${{ env.CV_EN_OUTPUT }}
-        asset_content_type: application/pdf
-    
-    # Résumé final
+
+    # Resume final avec details
     - name: Summary
       run: |
-        echo "## Compilation reussie" >> $GITHUB_STEP_SUMMARY
+        echo "## Compilation et Release réussies" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Fichiers generes:**" >> $GITHUB_STEP_SUMMARY
-        echo "- CV Francais: \`${{ env.CV_FR_OUTPUT }}\`" >> $GITHUB_STEP_SUMMARY
-        echo "- CV Anglais: \`${{ env.CV_EN_OUTPUT }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "**Fichiers générés:**" >> $GITHUB_STEP_SUMMARY
+        
+        FR_SIZE=$(stat -c%s "custom/output/fr/${{ env.CV_FR_OUTPUT }}")
+        EN_SIZE=$(stat -c%s "custom/output/en/${{ env.CV_EN_OUTPUT }}")
+        
+        echo "- CV Français: \`${{ env.CV_FR_OUTPUT }}\` (${FR_SIZE} bytes)" >> $GITHUB_STEP_SUMMARY
+        echo "- CV Anglais: \`${{ env.CV_EN_OUTPUT }}\` (${EN_SIZE} bytes)" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Tag:** \`${{ steps.tag.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "Les CV sont maintenant disponibles dans les assets de la release!"
