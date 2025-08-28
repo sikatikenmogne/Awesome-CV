@@ -216,7 +216,7 @@
 \newcommand*{\entrypositionstyle}[1]{{\fontsize{10pt}{1em}\bodyfont\scshape\color{graytext} #1}}
 \newcommand*{\entrydatestyle}[1]{{\fontsize{9pt}{1em}\bodyfontlight\slshape\color{lighttext} #1}}
 \newcommand*{\entrylocationstyle}[1]{{\fontsize{9pt}{1em}\bodyfontlight\slshape\color{awesome} #1}}
-\newcommand*{\descriptionstyle}[1]{{\fontsize{10pt}{1em}\bodyfontlight\upshape\color{text} #1}}
+\newcommand*{\descriptionstyle}[1]{{\fontsize{10pt}{1em}\bodyfont\upshape\color{text} #1}}
 
 % For elements of subentry
 \newcommand*{\subentrytitlestyle}[1]{{\fontsize{8pt}{1em}\bodyfont\mdseries\color{graytext} #1}}
@@ -233,7 +233,7 @@
 
 % For elements of skill
 \newcommand*{\skilltypestyle}[1]{{\fontsize{10pt}{1em}\bodyfont\bfseries\color{darktext} #1}}
-\newcommand*{\skillsetstyle}[1]{{\fontsize{9.5pt}{1em}\bodyfontlight\color{text} #1}}
+\newcommand*{\skillsetstyle}[1]{{\fontsize{9.5pt}{1em}\bodyfont\color{text} #1}}
 
 % For elements of the cover letter
 \newcommand*{\lettersectionstyle}[1]{{\fontsize{14pt}{1em}\bodyfont\bfseries\color{text}\@sectioncolor #1}}
@@ -801,7 +801,7 @@
   \bodyfontlight
   \begin{itemize}[leftmargin=0ex, label={}, nosep, noitemsep]
     \setlength{\parskip}{0pt}
-    \renewcommand{\labelitemi}{\bodyfontlight}
+    \renewcommand{\labelitemi}{\bodyfont}
 }{%
   \end{itemize}
   \end{justify}
