@@ -13,8 +13,18 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v4
 
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    
+    - name: Setup LaTeX
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y texlive-xetex texlive-fonts-recommended texlive-latex-extra texlive-luatex
+
     - name: Compile
-      run: make
+      run: python3 cv.py build all
 
     - uses: actions/upload-artifact@v4
       with:
