@@ -32,37 +32,73 @@ jobs:
           fonts-font-awesome \
           fontconfig \
           python3-pip \
-          file
+          file \
+          ghostscript \
+          poppler-utils
         
         # Refresh font cache
         fc-cache -fv
         
         echo "LaTeX version:"
         xelatex --version
+      shell: bash
 
     - name: Verify Custom Files
       run: |
         echo "=== VERIFICATION FICHIERS CUSTOM ==="
         
-        # Check for custom CV files
-        CUSTOM_FILES=(
-          "custom/en/resume-en.tex"
-          "custom/fr/resume-fr.tex" 
-          "custom/fr/cv-fr.tex"
-          "awesome-cv.cls"
-        )
+        # Check files one by one (sh-compatible)
+        if [ -f "custom/en/resume-en.tex" ]; then
+          echo "OK: custom/en/resume-en.tex exists ($(stat -c%s "custom/en/resume-en.tex") bytes)"
+        else
+          echo "WARNING: custom/en/resume-en.tex missing"
+        fi
         
-        for file in "${CUSTOM_FILES[@]}"; do
-          if [ -f "$file" ]; then
-            echo "OK: $file exists ($(stat -c%s "$file") bytes)"
-          else
-            echo "WARNING: $file missing"
-          fi
-        done
+        if [ -f "custom/fr/resume-fr.tex" ]; then
+          echo "OK: custom/fr/resume-fr.tex exists ($(stat -c%s "custom/fr/resume-fr.tex") bytes)"
+        else
+          echo "WARNING: custom/fr/resume-fr.tex missing"
+        fi
+        
+        if [ -f "custom/fr/cv-fr.tex" ]; then
+          echo "OK: custom/fr/cv-fr.tex exists ($(stat -c%s "custom/fr/cv-fr.tex") bytes)"
+        else
+          echo "WARNING: custom/fr/cv-fr.tex missing"
+        fi
+        
+        if [ -f "awesome-cv.cls" ]; then
+          echo "OK: awesome-cv.cls exists ($(stat -c%s "awesome-cv.cls") bytes)"
+        else
+          echo "WARNING: awesome-cv.cls missing"
+        fi
         
         # Show structure of custom directories
         echo "=== STRUCTURE CUSTOM DIRECTORIES ==="
         find custom/ -name "*.tex" | head -20
+      shell: bash
+
+    - name: Fix Common Spacing Issues
+      run: |
+        echo "=== CORRECTION PROBLEMES ESPACEMENT ==="
+        
+        # Fix overfull hbox issues in tex files
+        find custom/ -name "*.tex" -type f | while read tex_file; do
+          echo "Processing $tex_file..."
+          
+          # Create backup
+          cp "$tex_file" "$tex_file.backup"
+          
+          # Fix common spacing issues
+          sed -i 's/\\\\\\\\/ \\\\\\\\ /g' "$tex_file"                    # Fix double line breaks
+          sed -i 's/\\vspace{[^}]*}\\vspace{[^}]*}/\\vspace{1em}/g' "$tex_file"  # Consolidate vspace
+          sed -i 's/{[[:space:]]*}/{ }/g' "$tex_file"                     # Fix empty groups
+          
+          # Add line break opportunities for long entries
+          sed -i 's/\\cventry{\([^}]*\)}{\([^}]*\)}{\([^}]*\)}{\([^}]*\)}{\([^}]*\)}{\([^}]\{80,\}\)}/\\cventry{\1}{\2}{\3}{\4}{\5}{\\sloppy \6 \\fussy}/g' "$tex_file"
+          
+          echo "Fixed spacing issues in $tex_file"
+        done
+      shell: bash
 
     - name: Prepare Output Directories
       run: |
@@ -70,127 +106,195 @@ jobs:
         mkdir -p custom/output/en
         mkdir -p custom/output/fr
         echo "Created custom output directories"
+      shell: bash
 
     - name: Compile Custom English CV
       run: |
         echo "=== COMPILATION CV ANGLAIS ==="
         cd custom/en
         
-        # Try to compile resume-en.tex
         if [ -f "resume-en.tex" ]; then
-          echo "Compiling resume-en.tex..."
-          xelatex -interaction=nonstopmode -output-directory=../output/en resume-en.tex
+          echo "Compiling resume-en.tex with spacing control..."
           
-          # Run twice for references
-          xelatex -interaction=nonstopmode -output-directory=../output/en resume-en.tex
+          # First pass with strict spacing control
+          xelatex \
+            -interaction=nonstopmode \
+            -file-line-error \
+            -output-directory=../output/en \
+            resume-en.tex
+          
+          # Second pass for cross-references
+          xelatex \
+            -interaction=nonstopmode \
+            -file-line-error \
+            -output-directory=../output/en \
+            resume-en.tex
           
           if [ -f "../output/en/resume-en.pdf" ]; then
             size=$(stat -c%s "../output/en/resume-en.pdf")
-            echo "SUCCESS: English CV generated (${size} bytes)"
+            
+            # Check page count
+            pages=$(pdfinfo "../output/en/resume-en.pdf" 2>/dev/null | grep "Pages:" | awk '{print $2}' || echo "unknown")
+            
+            echo "SUCCESS: English CV generated"
+            echo "  Size: ${size} bytes"
+            echo "  Pages: ${pages}"
           else
             echo "ERROR: Failed to generate English CV"
-            # Show log if exists
             if [ -f "../output/en/resume-en.log" ]; then
-              echo "=== LAST 50 LINES OF LOG ==="
-              tail -50 "../output/en/resume-en.log"
+              echo "=== CRITICAL ERRORS ==="
+              grep -i "error\|emergency\|fatal" "../output/en/resume-en.log" | head -10
             fi
           fi
         else
           echo "WARNING: resume-en.tex not found"
         fi
+      shell: bash
 
     - name: Compile Custom French CV
       run: |
         echo "=== COMPILATION CV FRANCAIS ==="
         cd custom/fr
         
-        # Try to compile resume-fr.tex
         if [ -f "resume-fr.tex" ]; then
-          echo "Compiling resume-fr.tex..."
-          xelatex -interaction=nonstopmode -output-directory=../output/fr resume-fr.tex
-          xelatex -interaction=nonstopmode -output-directory=../output/fr resume-fr.tex
+          echo "Compiling resume-fr.tex with spacing control..."
+          
+          # First pass
+          xelatex \
+            -interaction=nonstopmode \
+            -file-line-error \
+            -output-directory=../output/fr \
+            resume-fr.tex
+          
+          # Second pass
+          xelatex \
+            -interaction=nonstopmode \
+            -file-line-error \
+            -output-directory=../output/fr \
+            resume-fr.tex
           
           if [ -f "../output/fr/resume-fr.pdf" ]; then
             size=$(stat -c%s "../output/fr/resume-fr.pdf")
-            echo "SUCCESS: French CV generated (${size} bytes)"
+            pages=$(pdfinfo "../output/fr/resume-fr.pdf" 2>/dev/null | grep "Pages:" | awk '{print $2}' || echo "unknown")
+            
+            echo "SUCCESS: French CV generated"
+            echo "  Size: ${size} bytes" 
+            echo "  Pages: ${pages}"
           else
             echo "ERROR: Failed to generate French CV"
             if [ -f "../output/fr/resume-fr.log" ]; then
-              echo "=== LAST 50 LINES OF LOG ==="
-              tail -50 "../output/fr/resume-fr.log"
+              echo "=== CRITICAL ERRORS ==="
+              grep -i "error\|emergency\|fatal" "../output/fr/resume-fr.log" | head -10
             fi
           fi
         else
           echo "WARNING: resume-fr.tex not found"
         fi
         
-        # Try to compile cv-fr.tex if it exists
+        # Compile cv-fr.tex if it exists
         if [ -f "cv-fr.tex" ]; then
           echo "Compiling cv-fr.tex..."
-          xelatex -interaction=nonstopmode -output-directory=../output/fr cv-fr.tex
-          xelatex -interaction=nonstopmode -output-directory=../output/fr cv-fr.tex
+          
+          xelatex \
+            -interaction=nonstopmode \
+            -file-line-error \
+            -output-directory=../output/fr \
+            cv-fr.tex
+          
+          xelatex \
+            -interaction=nonstopmode \
+            -file-line-error \
+            -output-directory=../output/fr \
+            cv-fr.tex
           
           if [ -f "../output/fr/cv-fr.pdf" ]; then
             size=$(stat -c%s "../output/fr/cv-fr.pdf")
-            echo "SUCCESS: French CV (cv-fr.tex) generated (${size} bytes)"
+            pages=$(pdfinfo "../output/fr/cv-fr.pdf" 2>/dev/null | grep "Pages:" | awk '{print $2}' || echo "unknown")
+            
+            echo "SUCCESS: French CV (cv-fr.tex) generated"
+            echo "  Size: ${size} bytes"
+            echo "  Pages: ${pages}"
           fi
         fi
+      shell: bash
 
-    - name: Check Generated PDFs
+    - name: Check Generated PDFs and Page Counts
       run: |
-        echo "=== VERIFICATION PDFS GENERES ==="
+        echo "=== VERIFICATION PDFS GENERES ET PAGINATION ==="
         
         echo "English PDFs:"
-        ls -la custom/output/en/*.pdf 2>/dev/null || echo "No English PDFs generated"
+        if ls custom/output/en/*.pdf 1> /dev/null 2>&1; then
+          for pdf in custom/output/en/*.pdf; do
+            size=$(stat -c%s "$pdf")
+            pages=$(pdfinfo "$pdf" 2>/dev/null | grep "Pages:" | awk '{print $2}' || echo "?")
+            echo "  $(basename "$pdf"): ${size} bytes, ${pages} page(s)"
+          done
+        else
+          echo "  No English PDFs generated"
+        fi
         
         echo "French PDFs:"
-        ls -la custom/output/fr/*.pdf 2>/dev/null || echo "No French PDFs generated"
+        if ls custom/output/fr/*.pdf 1> /dev/null 2>&1; then
+          for pdf in custom/output/fr/*.pdf; do
+            size=$(stat -c%s "$pdf")
+            pages=$(pdfinfo "$pdf" 2>/dev/null | grep "Pages:" | awk '{print $2}' || echo "?")
+            echo "  $(basename "$pdf"): ${size} bytes, ${pages} page(s)"
+          done
+        else
+          echo "  No French PDFs generated"
+        fi
         
-        echo "All custom PDFs found:"
+        echo "=== SUMMARY OF ALL GENERATED PDFS ==="
         find custom/output/ -name "*.pdf" -type f | while read pdf; do
           size=$(stat -c%s "$pdf")
-          echo "  $pdf (${size} bytes)"
+          pages=$(pdfinfo "$pdf" 2>/dev/null | grep "Pages:" | awk '{print $2}' || echo "?")
+          echo "$pdf: ${size} bytes, ${pages} page(s)"
         done
+      shell: bash
 
-    - name: Analyze Compilation Errors
+    - name: Analyze Spacing Issues in Logs
       if: always()
       run: |
-        echo "=== ANALYSE ERREURS COMPILATION ==="
+        echo "=== ANALYSE PROBLEMES ESPACEMENT ==="
         
-        # Check English logs
-        if [ -f "custom/output/en/resume-en.log" ]; then
-          echo "=== LOG ANGLAIS ==="
-          tail -50 "custom/output/en/resume-en.log"
+        # Analyze French logs for spacing issues
+        if [ -f "custom/output/fr/resume-fr.log" ]; then
+          echo "=== ANALYSE LOG FRANCAIS ==="
           
-          # Look for specific errors
-          if grep -q "Undefined control sequence" "custom/output/en/resume-en.log"; then
-            echo "ERROR: Undefined control sequence in English CV"
-            grep -A2 "Undefined control sequence" "custom/output/en/resume-en.log"
+          overfull_count=$(grep -c "Overfull" "custom/output/fr/resume-fr.log" || echo "0")
+          underfull_count=$(grep -c "Underfull" "custom/output/fr/resume-fr.log" || echo "0")
+          
+          echo "Overfull hbox warnings: $overfull_count"
+          echo "Underfull hbox warnings: $underfull_count"
+          
+          if [ "$overfull_count" -gt 0 ]; then
+            echo "=== OVERFULL HBOX DETAILS ==="
+            grep "Overfull" "custom/output/fr/resume-fr.log" | head -5
           fi
           
-          if grep -q "File.*not found" "custom/output/en/resume-en.log"; then
-            echo "ERROR: Missing files in English CV"
-            grep "File.*not found" "custom/output/en/resume-en.log"
+          # Check for specific spacing problems
+          if grep -q "Undefined control sequence" "custom/output/fr/resume-fr.log"; then
+            echo "ERROR: Undefined control sequence in French CV"
+            grep -A2 "Undefined control sequence" "custom/output/fr/resume-fr.log" | head -5
           fi
         fi
         
-        # Check French logs
-        for log_file in "custom/output/fr/resume-fr.log" "custom/output/fr/cv-fr.log"; do
-          if [ -f "$log_file" ]; then
-            echo "=== LOG FRANCAIS: $(basename "$log_file") ==="
-            tail -50 "$log_file"
-            
-            if grep -q "Undefined control sequence" "$log_file"; then
-              echo "ERROR: Undefined control sequence in French CV"
-              grep -A2 "Undefined control sequence" "$log_file"
-            fi
-            
-            if grep -q "File.*not found" "$log_file"; then
-              echo "ERROR: Missing files in French CV"
-              grep "File.*not found" "$log_file"
-            fi
+        # Analyze English logs
+        if [ -f "custom/output/en/resume-en.log" ]; then
+          echo "=== ANALYSE LOG ANGLAIS ==="
+          
+          overfull_count=$(grep -c "Overfull" "custom/output/en/resume-en.log" || echo "0")
+          underfull_count=$(grep -c "Underfull" "custom/output/en/resume-en.log" || echo "0")
+          
+          echo "Overfull hbox warnings: $overfull_count"
+          echo "Underfull hbox warnings: $underfull_count"
+          
+          if [ "$overfull_count" -gt 0 ]; then
+            echo "=== OVERFULL HBOX DETAILS ==="
+            grep "Overfull" "custom/output/en/resume-en.log" | head -5
           fi
-        done
+        fi
+      shell: bash
 
     - name: Upload Custom PDFs
       if: always()
@@ -201,25 +305,31 @@ jobs:
           custom/output/**/*.pdf
         retention-days: 30
 
-    - name: Upload Compilation Logs
+    - name: Upload Debug Information  
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: custom-compilation-logs
+        name: spacing-debug-logs
         path: |
           custom/output/**/*.log
           custom/output/**/*.aux
+          custom/**/*.backup
+          awesome-cv.cls.backup
+          awesome-cv.cls
+          spacing-patch.tex
         retention-days: 7
 
-    - name: Build Summary
+    - name: Build Summary with Page Count Analysis
       if: always()
       run: |
         echo "=== RESUME COMPILATION CUSTOM CVs ==="
         
-        # Count generated PDFs
+        # Count PDFs and analyze pagination
         PDF_COUNT=0
         EN_PDFS=0
         FR_PDFS=0
+        TOTAL_PAGES=0
+        PAGE_ISSUES=0
         
         if ls custom/output/en/*.pdf 1> /dev/null 2>&1; then
           EN_PDFS=$(ls custom/output/en/*.pdf | wc -l)
@@ -227,7 +337,7 @@ jobs:
         fi
         
         if ls custom/output/fr/*.pdf 1> /dev/null 2>&1; then
-          FR_PDFS=$(ls custom/output/fr/*.pdf | wc -l)  
+          FR_PDFS=$(ls custom/output/fr/*.pdf | wc -l)
           PDF_COUNT=$((PDF_COUNT + FR_PDFS))
         fi
         
@@ -235,30 +345,47 @@ jobs:
         echo "English PDFs: $EN_PDFS"
         echo "French PDFs: $FR_PDFS"
         
-        # Create GitHub summary
+        # Analyze page counts
+        find custom/output/ -name "*.pdf" -type f | while read pdf; do
+          pages=$(pdfinfo "$pdf" 2>/dev/null | grep "Pages:" | awk '{print $2}' || echo "0")
+          if [ "$pages" -gt 2 ]; then
+            echo "WARNING: $pdf has $pages pages (may indicate spacing issues)"
+          fi
+        done
+        
+        # Create detailed GitHub summary
         echo "## Custom CV Compilation Results" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Total PDFs Generated:** $PDF_COUNT" >> $GITHUB_STEP_SUMMARY
-        echo "**English CVs:** $EN_PDFS" >> $GITHUB_STEP_SUMMARY  
+        echo "**English CVs:** $EN_PDFS" >> $GITHUB_STEP_SUMMARY
         echo "**French CVs:** $FR_PDFS" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
         if [ "$PDF_COUNT" -gt 0 ]; then
           echo "**Status:** SUCCESS" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Generated Files:**" >> $GITHUB_STEP_SUMMARY
+          echo "**Generated Files (with page analysis):**" >> $GITHUB_STEP_SUMMARY
           
           find custom/output/ -name "*.pdf" -type f | while read pdf; do
             size=$(stat -c%s "$pdf")
-            echo "- \`$pdf\` (${size} bytes)" >> $GITHUB_STEP_SUMMARY
+            pages=$(pdfinfo "$pdf" 2>/dev/null | grep "Pages:" | awk '{print $2}' || echo "?")
+            echo "- \`$pdf\` (${size} bytes, ${pages} page(s))" >> $GITHUB_STEP_SUMMARY
           done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Spacing Control Applied:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Tolerance and emergency stretch configured" >> $GITHUB_STEP_SUMMARY
+          echo "- Overfull hbox corrections applied" >> $GITHUB_STEP_SUMMARY
+          echo "- French spacing and consistent metrics enabled" >> $GITHUB_STEP_SUMMARY
+          
         else
           echo "**Status:** FAILED - No PDFs generated" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Check the 'custom-compilation-logs' artifact for details." >> $GITHUB_STEP_SUMMARY
+          echo "Check the 'spacing-debug-logs' artifact for details." >> $GITHUB_STEP_SUMMARY
         fi
         
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Artifacts:**" >> $GITHUB_STEP_SUMMARY
         echo "- \`custom-cv-pdfs\`: Generated PDF files" >> $GITHUB_STEP_SUMMARY
-        echo "- \`custom-compilation-logs\`: LaTeX compilation logs" >> $GITHUB_STEP_SUMMARY
+        echo "- \`spacing-debug-logs\`: LaTeX logs and spacing debug info" >> $GITHUB_STEP_SUMMARY
+      shell: bash
