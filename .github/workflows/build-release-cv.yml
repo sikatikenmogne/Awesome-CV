@@ -233,7 +233,7 @@ jobs:
     # Upload des logs en cas de succès partiel ou pour debug
     - name: Upload Debug Logs
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: latex-compilation-logs
         path: |
