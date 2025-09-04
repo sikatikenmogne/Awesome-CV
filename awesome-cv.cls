@@ -24,6 +24,12 @@
 \ProvidesClass{awesome-cv}[2017/02/05 v1.6.1 Awesome Curriculum Vitae Class]
 \NeedsTeXFormat{LaTeX2e}
 
+%-------------------------------------------------------------------------------
+%                Font directory configuration
+%-------------------------------------------------------------------------------
+% Define @fontdir variable to prevent undefined control sequence errors
+\newcommand*{\@fontdir}{}
+\newcommand*{\fontdir}[1][fonts/]{\def\@fontdir{#1}}
 
 %-------------------------------------------------------------------------------
 %                Class options
@@ -42,6 +48,19 @@
 \ProcessOptions\relax
 \LoadClass{article}
 
+%-------------------------------------------------------------------------------
+%                Spacing control patch
+%-------------------------------------------------------------------------------
+% Control spacing to prevent extra pages and overfull hbox
+\tolerance=1414
+\hbadness=1414
+\emergencystretch=1.5em
+\hfuzz=0.3pt
+\widowpenalty=10000
+\clubpenalty=10000
+\raggedbottom
+\frenchspacing
+\spaceskip=0.33em plus 0.1em minus 0.05em
 
 %-------------------------------------------------------------------------------
 %                3rd party packages
@@ -100,13 +119,6 @@
 \RequirePackage{hyperref}
 \RequirePackage{graphicx}
 \RequirePackage{calc}
-
-%-------------------------------------------------------------------------------
-%                Configuration for directory locations
-%-------------------------------------------------------------------------------
-% Configure an optional directory location for fonts(default: 'fonts/')
-% Not required anymore but left in place for backward compatability.
-\newcommand*{\fontdir}[1][fonts/]{\def\@fontdir{#1}}
 
 %-------------------------------------------------------------------------------
 %                Configuration for layout
@@ -173,7 +185,6 @@
 %-------------------------------------------------------------------------------
 
 \newfontfamily\headerfont[
-  Path=\@fontdir,
   UprightFont=*-Regular,
   ItalicFont=*-Italic,
   BoldFont=*-Bold,
@@ -181,13 +192,11 @@
 ]{Roboto}
 
 \newfontfamily\headerfontlight[
-  Path=\@fontdir,
   UprightFont=*-Thin,
   ItalicFont=*-ThinItalic,
   BoldFont=*-Medium,
   BoldItalicFont=*-MediumItalic,
 ]{Roboto}
-
 
 % \newcommand*{\headerfont}{\roboto}
 % \newcommand*{\headerfontlight}{\robotolight}
@@ -704,20 +713,20 @@
 }{%
   \end{center}
 }
-% Define an entry of cv information
-% Usage: \cventry{<position>}{<title>}{<location>}{<date>}{<description>}
+
+% CORRECTED cventry command - eliminates extra line breaks
 \newcommand*{\cventry}[5]{%
-  \vspace{-2.0mm}
-  \setlength\tabcolsep{0pt}
-  \setlength{\extrarowheight}{0pt}
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} L{\textwidth - 4.5cm} R{4.5cm}}
-    \ifempty{#2#3}
-      {\entrypositionstyle{#1} & \entrydatestyle{#4} \\}
-      {\entrytitlestyle{#2} & \entrylocationstyle{#3} \\
-      \entrypositionstyle{#1} & \entrydatestyle{#4} \\}
-    \ifstrempty{#5}
-      {}
-      {\multicolumn{2}{L{\textwidth}}{\descriptionstyle{#5}}}
+  \vspace{-2.0mm}%
+  \setlength\tabcolsep{0pt}%
+  \setlength{\extrarowheight}{0pt}%
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} L{\textwidth - 4.5cm} R{4.5cm}}%
+    \ifempty{#2#3}%
+      {\entrypositionstyle{#1} & \entrydatestyle{#4} \\}%
+      {\entrytitlestyle{#2} & \entrylocationstyle{#3} \\%
+      \entrypositionstyle{#1} & \entrydatestyle{#4} \\}%
+    \ifstrempty{#5}%
+      {}%
+      {\multicolumn{2}{L{\textwidth}}{\descriptionstyle{#5}}}%
   \end{tabular*}%
 }
 
@@ -727,22 +736,22 @@
 }{%
   \end{center}
 }
-% Define a subentry of cv information
-% Usage: \cvsubentry{<position>}{<title>}{<date>}{<description>}
+
+% CORRECTED cvsubentry command 
 \newcommand*{\cvsubentry}[4]{%
-  \setlength\tabcolsep{0pt}
-  \setlength{\extrarowheight}{0pt}
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} L{\textwidth - 4.5cm} R{4.5cm}}
-    \setlength\leftskip{0.2cm}
-    \subentrytitlestyle{#2} & \ifthenelse{\equal{#1}{}}
-      {\subentrydatestyle{#3}}{}
-    \ifthenelse{\equal{#1}{}}
-      {}
-      {\subentrypositionstyle{#1} & \subentrydatestyle{#3} \\}
-    \ifthenelse{\equal{#4}{}}
-      {}
-      {\multicolumn{2}{L{17.0cm}}{\subdescriptionstyle{#4}} \\}
-  \end{tabular*}
+  \setlength\tabcolsep{0pt}%
+  \setlength{\extrarowheight}{0pt}%
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} L{\textwidth - 4.5cm} R{4.5cm}}%
+    \setlength\leftskip{0.2cm}%
+    \subentrytitlestyle{#2} & \ifthenelse{\equal{#1}{}}%
+      {\subentrydatestyle{#3}}{}%
+    \ifthenelse{\equal{#1}{}}%
+      {}%
+      {\subentrypositionstyle{#1} & \subentrydatestyle{#3} \\}%
+    \ifthenelse{\equal{#4}{}}%
+      {}%
+      {\multicolumn{2}{L{17.0cm}}{\subdescriptionstyle{#4}} \\}%
+  \end{tabular*}%
 }
 
 % Define an environment for cvhonor
@@ -757,6 +766,7 @@
     \end{tabular*}
   \end{center}
 }
+
 % Define a line of cv information(honor, award or something else)
 % Usage: \cvhonor{<position>}{<title>}{<location>}{<date>}
 \newcommand*{\cvhonor}[4]{%
@@ -775,11 +785,11 @@
     \end{tabular*}
   \end{center}
 }
-% Define a line of cv information(skill)
-% Usage: \cvskill{<type>}{<skillset>}
+
+% CORRECTED cvskill command - removed extra closing brace
 \newcommand*{\cvskill}[2]{%
 	\skilltypestyle{#1} & \skillsetstyle{#2} \\
-}}
+}
 
 % Define an environment for cvitems(for cventry)
 \newenvironment{cvitems}{%
@@ -865,7 +875,6 @@
 % QR CODE OVERLAY - VERSION SANS SAUT DE LIGNE
 % Solution robuste utilisant eso-pic
 %-------------------------------------------------------------------------------
-
 
 % Define keys for optional parameters
 \define@key{qroverlay}{x}{\def\qr@x{#1}}

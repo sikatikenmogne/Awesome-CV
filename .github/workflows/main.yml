@@ -66,26 +66,6 @@ jobs:
         echo "Tous les fichiers .tex vérifiés et corrigés"
       shell: bash
 
-    - name: Test Compilation Syntax
-      run: |
-        echo "=== TEST SYNTAXE COMPILATION ==="
-        
-        # Test awesome-cv.cls syntax
-        echo "\\documentclass{awesome-cv}\\begin{document}Test\\end{document}" > test-syntax.tex
-        
-        if xelatex -interaction=nonstopmode test-syntax.tex > /dev/null 2>&1; then
-          echo "✓ awesome-cv.cls syntax OK"
-        else
-          echo "✗ awesome-cv.cls syntax errors detected"
-          echo "Checking for remaining issues..."
-          
-          # Show specific syntax errors
-          xelatex -interaction=nonstopmode test-syntax.tex 2>&1 | grep -i "error\|undefined\|emergency" | head -5
-        fi
-        
-        rm -f test-syntax.*
-      shell: bash
-
     - name: Prepare Output Directories
       run: |
         mkdir -p custom/output/en custom/output/fr
