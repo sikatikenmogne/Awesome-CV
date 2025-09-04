@@ -1,0 +1,167 @@
+%!TEX TS-program = xelatex
+%!TEX encoding = UTF-8 Unicode
+% Awesome CV LaTeX Template for Cover Letter
+%
+% This template has been downloaded from:
+% https://github.com/posquit0/Awesome-CV
+%
+% Authors:
+% Claud D. Park <posquit0.bj@gmail.com>
+% Lars Richter <mail@ayeks.de>
+%
+% Template license:
+% CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
+%
+
+
+%-------------------------------------------------------------------------------
+% CONFIGURATIONS
+%-------------------------------------------------------------------------------
+% A4 paper size by default, use 'letterpaper' for US letter
+\documentclass[11pt, a4paper]{../../../awesome-cv}
+
+% Configure page margins with geometry
+% \geometry{left=1cm, top=.8cm, right=1cm, bottom=2.25cm, footskip=.25cm}
+\geometry{left=1cm, top=.8cm, right=1cm, bottom=.4cm, footskip=.25cm}
+
+% Specify the location of the included fonts
+\fontdir[fonts/]
+
+% Color for highlights
+% Awesome Colors: awesome-emerald, awesome-skyblue, awesome-red, awesome-pink, awesome-orange
+%                 awesome-nephritis, awesome-concrete, awesome-darknight
+\colorlet{awesome}{awesome-skyblue}
+% Uncomment if you would like to specify your own color
+% \definecolor{awesome}{HTML}{CA63A8}
+
+% Colors for text
+% Uncomment if you would like to specify your own color
+\definecolor{darktext}{HTML}{414141}
+\definecolor{text}{HTML}{333333}
+\definecolor{graytext}{HTML}{5D5D5D}
+\definecolor{lighttext}{HTML}{999999}
+
+% Set false if you don't want to highlight section with awesome color
+\setbool{acvSectionColorHighlight}{true}
+
+% If you would like to change the social information separator from a pipe (|) to something else
+\renewcommand{\acvHeaderSocialSep}{\quad\textbar\quad}
+
+% Configuration for English language
+\usepackage[english]{babel}
+\usepackage[useregional]{datetime2}
+
+% Configuration de l'interligne à 1,5
+\usepackage{setspace}
+\setstretch{1}  % Définit l'interligne à 1,15
+% Configuration pour l'indentation des paragraphes
+
+%-------------------------------------------------------------------------------
+%	PERSONAL INFORMATION
+%	Comment any of the lines below if they are not required
+%-------------------------------------------------------------------------------
+% Available options: circle|rectangle,edge/noedge,left/right
+% \photo[circle,noedge,left]{./profile}
+\name{\textbf{Samuel}}{\textbf{SIKATI KENMOGNE}}
+\position{Software Engineer{\enskip\cdotp\enskip}Full-stack Web Developer}
+\address{Yaoundé, Cameroon ~·~ \textbf{Region of Origin:} West Region }
+
+\mobile{(+237) 657407989}
+\email{sikatikenmogne@gmail.com}
+\homepage{linktr.ee/samuelsikati}
+\github{sikatikenmogne}
+\linkedin{samuel-sikati-kenmogne-57953a1b7}
+% \gitlab{gitlab-id}
+% \stackoverflow{SO-id}{SO-name}
+% \twitter{@twit}
+% \skype{skype-id}
+% \reddit{reddit-id}
+% \medium{madium-id}
+% \googlescholar{googlescholar-id}{name-to-display}
+%% \firstname and \lastname will be used
+% \googlescholar{googlescholar-id}{}
+% \extrainfo{extra informations}
+
+% \quote{``Be the change that you want to see in the world."}
+
+
+%-------------------------------------------------------------------------------
+%	LETTER INFORMATION
+%	All of the below lines must be filled out
+%-------------------------------------------------------------------------------
+% The company being applied to
+\recipient
+  {Mr. Director General of}
+  {National Agency for Information\\and Communication Technologies (ANTIC)\\Yaoundé, Cameroon}
+% The date on the letter, default is the date of compilation
+\letterdate{Yaoundé, \today}
+% The title of the letter
+% \lettertitle{Application for Software Engineer Position}
+
+% \vspace{3cm} % Add vertical space here
+% How the letter is opened
+% \letteropening{Dear Sir,}
+% How the letter is closed
+% \letterclosing{Yours sincerely,}
+% Any enclosures with the letter
+\letterenclosure[Enclosed]{Curriculum Vitae, Diplomas, Identity Card Copy}
+
+
+%-------------------------------------------------------------------------------
+\begin{document}
+
+% Print the header with above personal informations
+% Give optional argument to change alignment(C: center, L: left, R: right)
+\makecvheader[L]
+
+% Print the footer with 3 arguments(<left>, <center>, <right>)
+% Leave any of these blank if they are not needed
+% \makecvfooter {\today} {SIKATI KENMOGNE Samuel~~~·~~~Cover Letter} {}
+% \makecvfooterqrlinksize[1.5cm]{}{SIKATI KENMOGNE Samuel~~~·~~~Cover Letter}{https://linktr.ee/samuelsikati}{samuelsikati.png}
+
+% Print the title with above letter informations
+\makelettertitle
+
+%-------------------------------------------------------------------------------
+%	LETTER CONTENT
+%-------------------------------------------------------------------------------
+\begin{cvletter}
+
+\lettersection{Subject: Application for Software Engineer Position}
+
+% \textbf{Personal Information:}\\
+% \textbf{Name:} Samuel SIKATI KENMOGNE\\
+% \textbf{Current Address:} Yaoundé, Centre Region, Cameroon\\
+% \textbf{Region of Origin:} West Region\\
+% \textbf{Phone Contact:} (+237) 657 407 989
+
+Sir,
+
+\setlength{\parindent}{2em}
+
+\indent  I have the honor of submitting my application for the Software Engineer position at ANTIC. In fact, I'm graduated with a master's degree in Computer Engineering specialized in Software Engineering from UCAC-ICAM Institute and a Bachelor's degree in Computer Science from the African Institute of Informatics (IAI/AICS - Cameroon).
+
+% \lettersection{VOUS - Your Institution}
+\indent ANTIC stands as Cameroon's leading institution in digital transformation, playing a pivotal role in developing national ICT policies and ensuring cybersecurity. Your commitment to technological innovation and digital inclusion across the nation represents the excellence in public service that motivates my career aspirations.
+
+% \lettersection{MOI - My Profile}
+\indent My professional experience encompasses comprehensive software development expertise gained at Société Générale Cameroon and PERENCO RIO DEL REY, where I developed secure web applications and optimized critical systems. I demonstrate proficiency in multiple programming languages (Python, Java, JavaScript/TypeScript, C\#, PHP), database management systems (SQL Server, PostgreSQL, MongoDB), and modern development practices including Agile methodologies, DevOps, and cybersecurity implementations. My Scrum Fundamentals certification and practical AI exploration complement my technical foundation.
+
+% \lettersection{NOUS - Our Collaboration}
+\indent Furthermore, this collaboration would enable me to apply my software architecture, API development, and system integration expertise to ANTIC's mission of developing secure, high-performance applications for government systems. My analytical rigor, initiative, and commitment to continuous learning would contribute effectively to your strategic objectives while advancing Cameroon's digital transformation through innovative, interoperable solutions.
+
+\indent This position represents a unique opportunity for me to apply my technical skills in software architecture, application security, and system integration in service of Cameroon's digital advancement. My analytical rigor, initiative, and team collaboration abilities, combined with my commitment to excellence and continuous learning, would allow me to make significant contributions to ANTIC's strategic objectives while furthering my expertise in public sector technology solutions.
+
+I look forward to contributing to ANTIC's mission and welcome the opportunity to discuss my qualifications further.
+
+Yours sincerely,
+
+\end{cvletter}
+
+
+%-------------------------------------------------------------------------------
+% Print the signature and enclosures with above letter informations
+\makeletterclosing
+
+
+\end{document}
