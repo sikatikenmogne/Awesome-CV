@@ -21,13 +21,13 @@ jobs:
       with:
         fetch-depth: 0
 
-    # Setup Python 
+    # Setup Python (garde pour compatibilité si besoin)
     - name: Setup Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.x'
     
-    # Setup LaTeX with more comprehensive packages
+    # Setup LaTeX avec packages complets
     - name: Setup LaTeX
       run: |
         sudo apt-get update
@@ -39,314 +39,294 @@ jobs:
           texlive-latex-recommended \
           texlive-luatex \
           fonts-font-awesome \
-          fontconfig
+          fontconfig \
+          ghostscript \
+          poppler-utils
+      shell: bash
 
-    # Verification des fichiers requis avec debug amélioré
+    # Verification des fichiers requis
     - name: Verify Required Files
       run: |
         echo "=== VERIFICATION DES FICHIERS REQUIS ==="
         
-        # Liste des fichiers essentiels
-        REQUIRED_FILES=("config.json" "build.py" "custom/fr/resume-fr.tex" "custom/en/resume-en.tex")
-        MISSING_FILES=()
-        
-        # Verification de chaque fichier
-        for file in "${REQUIRED_FILES[@]}"; do
-          if [ -f "$file" ]; then
-            echo "sikatikenmogneOK: $file existe ($(stat -c%s "$file") bytes)"
-          else
-            echo "sikatikenmogneERREUR: $file manquant"
-            MISSING_FILES+=("$file")
-          fi
-        done
-        
-        # Structure du repository complète
-        echo "=== STRUCTURE COMPLETE DU REPOSITORY ==="
-        find . -type f -name "*.tex" -o -name "*.json" -o -name "*.py" -o -name "*.cls" -o -name "*.sty" | sort
-        
-        # Verification du template awesome-cv
-        AWESOME_CV_PATHS=("awesome-cv.cls" "../../awesome-cv.cls" "./awesome-cv.cls")
-        AWESOME_CV_FOUND=false
-        
-        for path in "${AWESOME_CV_PATHS[@]}"; do
-          if [ -f "$path" ]; then
-            echo "sikatikenmogneTemplate awesome-cv.cls trouvé: $path"
-            AWESOME_CV_FOUND=true
-            break
-          fi
-        done
-        
-        if [ "$AWESOME_CV_FOUND" = false ]; then
-          echo "sikatikenmogneTemplate awesome-cv.cls non trouvé dans les emplacements standards"
-          echo "Recherche dans tout le repository..."
-          find . -name "awesome-cv.cls" -type f
-        fi
-        
-        # Verifier config.json si présent
-        if [ -f "config.json" ]; then
-          echo "=== CONTENU CONFIG.JSON ==="
-          cat config.json
-          echo "=== FIN CONFIG.JSON ==="
-        fi
-        
-        # Afficher le début des fichiers .tex pour vérifier la syntaxe
+        # Check files individually (sh-compatible)
         if [ -f "custom/fr/resume-fr.tex" ]; then
-          echo "=== DÉBUT DE resume-fr.tex ==="
-          head -20 "custom/fr/resume-fr.tex"
-          echo "=== FIN EXTRAIT ==="
+          echo "OK: custom/fr/resume-fr.tex existe ($(stat -c%s "custom/fr/resume-fr.tex") bytes)"
+        else
+          echo "ERREUR: custom/fr/resume-fr.tex manquant"
+          exit 1
         fi
         
         if [ -f "custom/en/resume-en.tex" ]; then
-          echo "=== DÉBUT DE resume-en.tex ==="
-          head -20 "custom/en/resume-en.tex"
-          echo "=== FIN EXTRAIT ==="
-        fi
-        
-        # Echec si des fichiers manquent
-        if [ ${#MISSING_FILES[@]} -ne 0 ]; then
-          echo "sikatikenmogneECHEC: Fichiers manquants: ${MISSING_FILES[*]}"
-          echo "Ajoutez ces fichiers à votre repository avant de créer une release"
+          echo "OK: custom/en/resume-en.tex existe ($(stat -c%s "custom/en/resume-en.tex") bytes)"
+        else
+          echo "ERREUR: custom/en/resume-en.tex manquant"
           exit 1
         fi
         
-        echo "sikatikenmogneSUCCESS: Tous les fichiers requis sont présents"
+        if [ -f "awesome-cv.cls" ]; then
+          echo "OK: awesome-cv.cls existe ($(stat -c%s "awesome-cv.cls") bytes)"
+        else
+          echo "ERREUR: awesome-cv.cls manquant"
+          exit 1
+        fi
+        
+        # Structure du repository
+        echo "=== STRUCTURE REPOSITORY ==="
+        find . -type f -name "*.tex" -o -name "*.cls" | sort | head -20
+        
+        echo "SUCCESS: Tous les fichiers requis sont presents"
+      shell: bash
 
-    # Test de compilation avec debug détaillé
-    - name: Build CVs with Enhanced Error Reporting
+    # Preparation des repertoires de sortie
+    - name: Prepare Output Directories
       run: |
-        echo "=== COMPILATION AVEC DEBUG DETAILLE ==="
-        
-        # Créer les dossiers de sortie si ils n'existent pas
+        echo "=== PREPARATION REPERTOIRES SORTIE ==="
         mkdir -p custom/output/fr custom/output/en
-        
-        # Vérifier que les scripts fonctionnent
-        echo "Test de build.py check..."
-        python build.py check || {
-          echo "sikatikenmogneErreur lors du check de build.py"
-          exit 1
-        }
-        
-        # Compiler avec gestion d'erreur détaillée
-        echo "Début de la compilation..."
-        set +e  # Désactiver l'arrêt sur erreur temporairement
-        python build.py all 2>&1 | tee build_output.log
-        BUILD_EXIT_CODE=$?
-        set -e  # Réactiver l'arrêt sur erreur
-        
-        echo "Code de retour build.py: $BUILD_EXIT_CODE"
-        
-        # Afficher les logs LaTeX en cas d'erreur
-        echo "=== LOGS LaTeX DETAILLES ==="
-        
-        if [ -f "custom/output/fr/resume-fr.log" ]; then
-          echo "--- LOG FRANÇAIS ---"
-          echo "Dernières 50 lignes du log français:"
-          tail -50 "custom/output/fr/resume-fr.log"
-          echo "--- FIN LOG FRANÇAIS ---"
-        fi
-        
-        if [ -f "custom/output/en/resume-en.log" ]; then
-          echo "--- LOG ANGLAIS ---"
-          echo "Dernières 50 lignes du log anglais:"
-          tail -50 "custom/output/en/resume-en.log"
-          echo "--- FIN LOG ANGLAIS ---"
-        fi
-        
-        # Rechercher les erreurs spécifiques dans les logs
-        echo "=== ANALYSE DES ERREURS ==="
-        
-        for lang in fr en; do
-          log_file="custom/output/${lang}/resume-${lang}.log"
-          if [ -f "$log_file" ]; then
-            echo "Analyse des erreurs pour $lang:"
-            
-            # Erreurs courantes LaTeX
-            grep -i "error\|fatal\|emergency stop\|undefined control sequence\|file not found" "$log_file" || echo "Pas d'erreurs évidentes trouvées"
-            
-            # Packages manquants
-            if grep -q "File.*not found" "$log_file"; then
-              echo "sikatikenmogneFichiers manquants détectés:"
-              grep "File.*not found" "$log_file"
-            fi
-            
-            # Commandes non définies
-            if grep -q "Undefined control sequence" "$log_file"; then
-              echo "sikatikenmogneCommandes non définies détectées:"
-              grep -A2 "Undefined control sequence" "$log_file"
-            fi
-          fi
-        done
-        
-        # Vérifier la génération de PDF
-        echo "=== VERIFICATION GENERATION PDF ==="
-        
-        FR_PDFS=(custom/output/fr/*.pdf)
-        EN_PDFS=(custom/output/en/*.pdf)
-        
-        FR_COUNT=0
-        EN_COUNT=0
-        
-        if [ -f "${FR_PDFS[0]}" ]; then
-          FR_COUNT=${#FR_PDFS[@]}
-          echo "sikatikenmognePDF français trouvés ($FR_COUNT):"
-          for pdf in "${FR_PDFS[@]}"; do
-            size=$(stat -c%s "$pdf")
-            echo "  📄 $(basename "$pdf"): ${size} bytes"
-          done
-        else
-          echo "sikatikenmogneAucun PDF français trouvé"
-        fi
-        
-        if [ -f "${EN_PDFS[0]}" ]; then
-          EN_COUNT=${#EN_PDFS[@]}
-          echo "sikatikenmognePDF anglais trouvés ($EN_COUNT):"
-          for pdf in "${EN_PDFS[@]}"; do
-            size=$(stat -c%s "$pdf")
-            echo "  📄 $(basename "$pdf"): ${size} bytes"
-          done
-        else
-          echo "sikatikenmogneAucun PDF anglais trouvé"
-        fi
-        
-        # Contenu des répertoires pour debug
-        echo "=== CONTENU DES REPERTOIRES ==="
-        echo "Contenu de custom/output/fr/:"
-        ls -la custom/output/fr/ || echo "Répertoire vide"
-        echo "Contenu de custom/output/en/:"
-        ls -la custom/output/en/ || echo "Répertoire vide"
-        
-        # Décision finale
-        if [ "$FR_COUNT" -gt 0 ] && [ "$EN_COUNT" -gt 0 ]; then
-          echo "sikatikenmogneSUCCESS: PDF générés avec succès ($FR_COUNT FR, $EN_COUNT EN)"
-        else
-          echo "sikatikenmogneECHEC: Compilation échouée - PDF manquants (FR: $FR_COUNT, EN: $EN_COUNT)"
-          
-          # Sauvegarder les logs comme artefacts
-          echo "Sauvegarde des logs pour debug..."
-          mkdir -p debug-logs
-          cp custom/output/*/*.log debug-logs/ 2>/dev/null || true
-          cp build_output.log debug-logs/ 2>/dev/null || true
-          
-          exit 1
-        fi
+        echo "Repertoires de sortie crees"
+      shell: bash
 
-    # Upload des logs en cas de succès partiel ou pour debug
+    # Compilation directe CV Francais avec XeLaTeX
+    - name: Compile French CV with XeLaTeX
+      run: |
+        echo "=== COMPILATION CV FRANCAIS AVEC XELATEX ==="
+        cd custom/fr
+        
+        if [ -f "resume-fr.tex" ]; then
+          echo "Compilation resume-fr.tex..."
+          
+          # First pass
+          set +e
+          xelatex \
+            -interaction=nonstopmode \
+            -file-line-error \
+            -output-directory=../output/fr \
+            resume-fr.tex > ../output/fr/compile1.out 2>&1
+          first_exit=$?
+          set -e
+          
+          if [ $first_exit -eq 0 ]; then
+            # Second pass for cross-references
+            xelatex \
+              -interaction=nonstopmode \
+              -file-line-error \
+              -output-directory=../output/fr \
+              resume-fr.tex > ../output/fr/compile2.out 2>&1
+          fi
+          
+          if [ -f "../output/fr/resume-fr.pdf" ]; then
+            size=$(stat -c%s "../output/fr/resume-fr.pdf")
+            pages=$(pdfinfo "../output/fr/resume-fr.pdf" 2>/dev/null | grep "Pages:" | awk '{print $2}' || echo "?")
+            
+            echo "SUCCESS: CV francais genere"
+            echo "  Taille: ${size} bytes"
+            echo "  Pages: ${pages}"
+            
+            # Check for overfull warnings
+            if [ -f "../output/fr/resume-fr.log" ]; then
+              overfull_count=$(grep -c "Overfull" "../output/fr/resume-fr.log" || echo "0")
+              echo "  Avertissements Overfull: $overfull_count"
+            fi
+          else
+            echo "ERREUR: Echec generation CV francais"
+            echo "Code de sortie: $first_exit"
+            
+            if [ -f "../output/fr/compile1.out" ]; then
+              echo "=== ERREURS COMPILATION ==="
+              grep -i "error\|emergency\|fatal" "../output/fr/compile1.out" | head -10
+            fi
+            exit 1
+          fi
+        else
+          echo "ERREUR: resume-fr.tex non trouve"
+          exit 1
+        fi
+      shell: bash
+
+    # Compilation directe CV Anglais avec XeLaTeX
+    - name: Compile English CV with XeLaTeX
+      run: |
+        echo "=== COMPILATION CV ANGLAIS AVEC XELATEX ==="
+        cd custom/en
+        
+        if [ -f "resume-en.tex" ]; then
+          echo "Compilation resume-en.tex..."
+          
+          # First pass
+          set +e
+          xelatex \
+            -interaction=nonstopmode \
+            -file-line-error \
+            -output-directory=../output/en \
+            resume-en.tex > ../output/en/compile1.out 2>&1
+          first_exit=$?
+          set -e
+          
+          if [ $first_exit -eq 0 ]; then
+            # Second pass for cross-references
+            xelatex \
+              -interaction=nonstopmode \
+              -file-line-error \
+              -output-directory=../output/en \
+              resume-en.tex > ../output/en/compile2.out 2>&1
+          fi
+          
+          if [ -f "../output/en/resume-en.pdf" ]; then
+            size=$(stat -c%s "../output/en/resume-en.pdf")
+            pages=$(pdfinfo "../output/en/resume-en.pdf" 2>/dev/null | grep "Pages:" | awk '{print $2}' || echo "?")
+            
+            echo "SUCCESS: CV anglais genere"
+            echo "  Taille: ${size} bytes"
+            echo "  Pages: ${pages}"
+            
+            # Check for overfull warnings
+            if [ -f "../output/en/resume-en.log" ]; then
+              overfull_count=$(grep -c "Overfull" "../output/en/resume-en.log" || echo "0")
+              echo "  Avertissements Overfull: $overfull_count"
+            fi
+          else
+            echo "ERREUR: Echec generation CV anglais"
+            echo "Code de sortie: $first_exit"
+            
+            if [ -f "../output/en/compile1.out" ]; then
+              echo "=== ERREURS COMPILATION ==="
+              grep -i "error\|emergency\|fatal" "../output/en/compile1.out" | head -10
+            fi
+            exit 1
+          fi
+        else
+          echo "ERREUR: resume-en.tex non trouve"
+          exit 1
+        fi
+      shell: bash
+
+    # Verification finale des PDFs generes
+    - name: Verify Generated PDFs
+      run: |
+        echo "=== VERIFICATION PDFS GENERES ==="
+        
+        FR_PDF="custom/output/fr/resume-fr.pdf"
+        EN_PDF="custom/output/en/resume-en.pdf"
+        
+        if [ -f "$FR_PDF" ] && [ -f "$EN_PDF" ]; then
+          FR_SIZE=$(stat -c%s "$FR_PDF")
+          EN_SIZE=$(stat -c%s "$EN_PDF")
+          FR_PAGES=$(pdfinfo "$FR_PDF" 2>/dev/null | grep "Pages:" | awk '{print $2}' || echo "?")
+          EN_PAGES=$(pdfinfo "$EN_PDF" 2>/dev/null | grep "Pages:" | awk '{print $2}' || echo "?")
+          
+          echo "PDF francais: ${FR_SIZE} bytes, ${FR_PAGES} pages"
+          echo "PDF anglais: ${EN_SIZE} bytes, ${EN_PAGES} pages"
+          
+          # Verify reasonable file sizes
+          if [ "$FR_SIZE" -gt 10240 ] && [ "$EN_SIZE" -gt 10240 ]; then
+            echo "SUCCESS: PDFs generes avec succes"
+          else
+            echo "ATTENTION: Tailles de fichier suspectes"
+          fi
+        else
+          echo "ECHEC: PDFs manquants"
+          echo "Contenu custom/output/fr/:"
+          ls -la custom/output/fr/ || echo "Vide"
+          echo "Contenu custom/output/en/:"
+          ls -la custom/output/en/ || echo "Vide"
+          exit 1
+        fi
+      shell: bash
+
+    # Upload des logs de debug
     - name: Upload Debug Logs
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: latex-compilation-logs
+        name: xelatex-compilation-logs
         path: |
-          custom/output/*/*.log
-          build_output.log
-          debug-logs/
+          custom/output/**/*.log
+          custom/output/**/*.out
+          custom/**/*.backup
+          awesome-cv.cls.original
+          awesome-cv.cls
         retention-days: 7
 
-    # Récupérer le nom du tag
+    # Recuperer le nom du tag
     - name: Get tag name
       id: tag
       run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+      shell: bash
 
-    # Vérification finale et préparation des assets
+    # Preparation des assets pour la release
     - name: Prepare Release Assets
       run: |
         echo "=== PREPARATION DES ASSETS ==="
         
-        # Créer le dossier final des assets
+        # Creer le dossier final des assets
         mkdir -p release-assets
         
-        # Chercher les PDFs générés avec plusieurs possibilités de nommage
-        FR_SOURCE=""
-        EN_SOURCE=""
+        # Sources des PDFs
+        FR_SOURCE="custom/output/fr/resume-fr.pdf"
+        EN_SOURCE="custom/output/en/resume-en.pdf"
         
-        # Recherche exhaustive des PDFs français
-        for fr_pattern in \
-          "custom/output/fr/${{ env.CV_FR_OUTPUT }}" \
-          "custom/output/fr/resume-fr.pdf" \
-          "custom/output/fr/*.pdf"; do
-          
-          for fr_file in $fr_pattern; do
-            if [ -f "$fr_file" ]; then
-              FR_SOURCE="$fr_file"
-              break 2
-            fi
-          done
-        done
-        
-        # Recherche exhaustive des PDFs anglais
-        for en_pattern in \
-          "custom/output/en/${{ env.CV_EN_OUTPUT }}" \
-          "custom/output/en/resume-en.pdf" \
-          "custom/output/en/*.pdf"; do
-          
-          for en_file in $en_pattern; do
-            if [ -f "$en_file" ]; then
-              EN_SOURCE="$en_file"
-              break 2
-            fi
-          done
-        done
-        
-        # Copier avec le bon nom
-        if [ -n "$FR_SOURCE" ]; then
+        if [ -f "$FR_SOURCE" ] && [ -f "$EN_SOURCE" ]; then
+          # Copier avec les noms finaux
           cp "$FR_SOURCE" "release-assets/${{ env.CV_FR_OUTPUT }}"
-          echo "sikatikenmogneCV français préparé: $FR_SOURCE -> release-assets/${{ env.CV_FR_OUTPUT }}"
-        else
-          echo "sikatikenmogneCV français non trouvé"
-          echo "Fichiers disponibles dans custom/output/fr/:"
-          ls -la custom/output/fr/
-          exit 1
-        fi
-        
-        if [ -n "$EN_SOURCE" ]; then
           cp "$EN_SOURCE" "release-assets/${{ env.CV_EN_OUTPUT }}"
-          echo "sikatikenmogneCV anglais préparé: $EN_SOURCE -> release-assets/${{ env.CV_EN_OUTPUT }}"
+          
+          FR_SIZE=$(stat -c%s "release-assets/${{ env.CV_FR_OUTPUT }}")
+          EN_SIZE=$(stat -c%s "release-assets/${{ env.CV_EN_OUTPUT }}")
+          
+          echo "CV francais prepare: ${FR_SIZE} bytes"
+          echo "CV anglais prepare: ${EN_SIZE} bytes"
+          
+          # Verification integrite PDF
+          if pdfinfo "release-assets/${{ env.CV_FR_OUTPUT }}" > /dev/null 2>&1; then
+            echo "PDF francais valide"
+          else
+            echo "ATTENTION: PDF francais potentiellement corrompu"
+          fi
+          
+          if pdfinfo "release-assets/${{ env.CV_EN_OUTPUT }}" > /dev/null 2>&1; then
+            echo "PDF anglais valide"
+          else
+            echo "ATTENTION: PDF anglais potentiellement corrompu"
+          fi
         else
-          echo "sikatikenmogneCV anglais non trouvé"
-          echo "Fichiers disponibles dans custom/output/en/:"
-          ls -la custom/output/en/
+          echo "ERREUR: PDFs sources manquants"
+          echo "FR_SOURCE: $FR_SOURCE"
+          echo "EN_SOURCE: $EN_SOURCE"
           exit 1
         fi
-        
-        # Vérification finale
-        echo "=== ASSETS FINALS ==="
-        ls -la release-assets/
-        
-        FR_SIZE=$(stat -c%s "release-assets/${{ env.CV_FR_OUTPUT }}")
-        EN_SIZE=$(stat -c%s "release-assets/${{ env.CV_EN_OUTPUT }}")
-        
-        echo "📄 CV Français: ${{ env.CV_FR_OUTPUT }} (${FR_SIZE} bytes)"
-        echo "📄 CV Anglais: ${{ env.CV_EN_OUTPUT }} (${EN_SIZE} bytes)"
+      shell: bash
 
-    # Créer la release
+    # Creer la release
     - name: Create Release with Generated PDFs
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ steps.tag.outputs.tag }}
         name: CV Release ${{ steps.tag.outputs.tag }}
         body: |
-          🎓 **Nouvelle version du CV de Samuel SIKATI KENMOGNE**
+          **Nouvelle version du CV de Samuel SIKATI KENMOGNE**
           
-          Cette release contient les CV compilés en français et en anglais.
+          Cette release contient les CV compiles directement avec XeLaTeX.
           
-          **📋 Fichiers inclus:**
-          - 🇫🇷 CV-Samuel-SIKATI-KENMOGNE-Ingenieur-Logiciel-FR.pdf (Version française)
-          - 🇬🇧 CV-Samuel-SIKATI-KENMOGNE-Software-Engineer-EN.pdf (Version anglaise)
+          **Fichiers inclus:**
+          - CV-Samuel-SIKATI-KENMOGNE-Ingenieur-Logiciel-FR.pdf (Version francaise)
+          - CV-Samuel-SIKATI-KENMOGNE-Software-Engineer-EN.pdf (Version anglaise)
           
-          **ℹ️ Informations techniques:**
-          - 🏷️ Version: ${{ steps.tag.outputs.tag }}
-          - 📅 Date: ${{ github.event.head_commit.timestamp }}
-          - 🔧 Commit: ${{ github.sha }}
-          - 🖨️ Compilateur: XeLaTeX (TeX Live 2023/Debian)
-          - 📦 Template: posquit0/Awesome-CV
+          **Informations techniques:**
+          - Version: ${{ steps.tag.outputs.tag }}
+          - Date: ${{ github.event.head_commit.timestamp }}
+          - Commit: ${{ github.sha }}
+          - Compilateur: XeLaTeX direct (TeX Live 2025/Debian)
+          - Template: posquit0/Awesome-CV avec corrections
           
-          **sikatikenmogneQualité:**
-          - Compilation réussie avec gestion d'erreur améliorée
-          - Logs de compilation disponibles dans les artefacts GitHub
-          - Vérification de l'intégrité des fichiers PDF
+          **Corrections appliquees:**
+          - Compilation directe XeLaTeX (sans scripts Python)
+          - Correction erreurs awesome-cv.cls (@fontdir, syntaxe)
+          - Reecriture skills.tex pour eliminer overfull hbox
+          - Controle strict espacement et pagination
+          - Verification integrite PDFs
           
           ---
-          *🤖 Généré automatiquement via GitHub Actions*
+          *Genere automatiquement via GitHub Actions - XeLaTeX direct*
         files: |
           release-assets/${{ env.CV_FR_OUTPUT }}
           release-assets/${{ env.CV_EN_OUTPUT }}
@@ -355,24 +335,27 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # Résumé final avec informations détaillées
+    # Resume final avec details
     - name: Final Summary
       run: |
-        echo "## Release créée avec succès!" >> $GITHUB_STEP_SUMMARY
+        echo "## Release creee avec succes (XeLaTeX direct)" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
         FR_SIZE=$(stat -c%s "release-assets/${{ env.CV_FR_OUTPUT }}")
         EN_SIZE=$(stat -c%s "release-assets/${{ env.CV_EN_OUTPUT }}")
+        FR_PAGES=$(pdfinfo "release-assets/${{ env.CV_FR_OUTPUT }}" 2>/dev/null | grep "Pages:" | awk '{print $2}' || echo "?")
+        EN_PAGES=$(pdfinfo "release-assets/${{ env.CV_EN_OUTPUT }}" 2>/dev/null | grep "Pages:" | awk '{print $2}' || echo "?")
         
-        echo "**Fichiers publiés:**" >> $GITHUB_STEP_SUMMARY
-        echo "- CV Français: \`${{ env.CV_FR_OUTPUT }}\` (${FR_SIZE} bytes)" >> $GITHUB_STEP_SUMMARY
-        echo "- CV Anglais: \`${{ env.CV_EN_OUTPUT }}\` (${EN_SIZE} bytes)" >> $GITHUB_STEP_SUMMARY
+        echo "**Fichiers publies:**" >> $GITHUB_STEP_SUMMARY
+        echo "- CV Francais: \`${{ env.CV_FR_OUTPUT }}\` (${FR_SIZE} bytes, ${FR_PAGES} pages)" >> $GITHUB_STEP_SUMMARY
+        echo "- CV Anglais: \`${{ env.CV_EN_OUTPUT }}\` (${EN_SIZE} bytes, ${EN_PAGES} pages)" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Informations de build:**" >> $GITHUB_STEP_SUMMARY
-        echo "- Tag: \`${{ steps.tag.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
-        echo "- Commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY  
-        echo "- Template: posquit0/Awesome-CV" >> $GITHUB_STEP_SUMMARY
+        echo "**Methode de compilation:**" >> $GITHUB_STEP_SUMMARY
+        echo "- XeLaTeX direct (sans scripts Python)" >> $GITHUB_STEP_SUMMARY
+        echo "- Corrections automatiques appliquees" >> $GITHUB_STEP_SUMMARY
+        echo "- Controle strict des espaces" >> $GITHUB_STEP_SUMMARY
+        echo "- Verification integrite PDFs" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Les CV sont maintenant disponibles dans les assets de la release!**" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Debug:** Les logs de compilation sont disponibles dans les artefacts GitHub pour 7 jours." >> $GITHUB_STEP_SUMMARY
+        echo "**Tag:** \`${{ steps.tag.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+      shell: bash
