@@ -1,4 +1,4 @@
-name: Compile PDFs
+name: Compile Custom CVs
 
 on:
   push: {}
@@ -20,7 +20,7 @@ jobs:
     
     - name: Enhanced LaTeX Setup
       run: |
-        echo "=== INSTALLATION PACKAGES LaTeX SUPPLEMENTAIRES ==="
+        echo "=== INSTALLATION PACKAGES LaTeX ==="
         apt-get update
         apt-get install -y \
           texlive-xetex \
@@ -39,266 +39,226 @@ jobs:
         
         echo "LaTeX version:"
         xelatex --version
-        echo "Python version:"
-        python3 --version
 
-    - name: Verify Repository Structure and Files
+    - name: Verify Custom Files
       run: |
-        echo "=== VERIFICATION STRUCTURE REPOSITORY ==="
+        echo "=== VERIFICATION FICHIERS CUSTOM ==="
         
-        # Show complete directory structure
-        echo "Structure complète du repository:"
-        find . -type f -name "*.tex" -o -name "*.py" -o -name "*.cls" -o -name "*.sty" -o -name "*.json" | sort
+        # Check for custom CV files
+        CUSTOM_FILES=(
+          "custom/en/resume-en.tex"
+          "custom/fr/resume-fr.tex" 
+          "custom/fr/cv-fr.tex"
+          "awesome-cv.cls"
+        )
         
-        # Check for required files
-        REQUIRED_FILES=("cv.py")
-        MISSING_FILES=()
-        
-        for file in "${REQUIRED_FILES[@]}"; do
+        for file in "${CUSTOM_FILES[@]}"; do
           if [ -f "$file" ]; then
-            echo "OK: $file existe ($(stat -c%s "$file") bytes)"
+            echo "OK: $file exists ($(stat -c%s "$file") bytes)"
           else
-            echo "ERREUR: $file manquant"
-            MISSING_FILES+=("$file")
+            echo "WARNING: $file missing"
           fi
         done
         
-        # Check for .tex files
-        echo "=== VERIFICATION FICHIERS TEX ==="
-        TEX_FILES=(custom/fr/resume-fr.tex custom/en/resume-en.tex)
-        
-        for tex_file in "${TEX_FILES[@]}"; do
-          if [ -f "$tex_file" ]; then
-            echo "OK: $tex_file trouvé ($(stat -c%s "$tex_file") bytes)"
-            echo "--- Début du fichier $tex_file ---"
-            head -20 "$tex_file"
-            echo "--- Fin extrait ---"
-          else
-            echo "ATTENTION: $tex_file manquant"
-          fi
-        done
-        
-        # Check for awesome-cv template
-        echo "=== VERIFICATION TEMPLATE AWESOME-CV ==="
-        if [ -f "awesome-cv.cls" ]; then
-          echo "OK: awesome-cv.cls trouvé à la racine"
-        elif find . -name "awesome-cv.cls" -type f | head -1; then
-          echo "OK: awesome-cv.cls trouvé dans le repository"
-          find . -name "awesome-cv.cls" -type f
-        else
-          echo "ATTENTION: awesome-cv.cls non trouvé"
-        fi
-        
-        # Show cv.py content if exists
-        if [ -f "cv.py" ]; then
-          echo "=== CONTENU cv.py (premiers 30 lignes) ==="
-          head -30 cv.py
-          echo "=== FIN EXTRAIT cv.py ==="
-        fi
+        # Show structure of custom directories
+        echo "=== STRUCTURE CUSTOM DIRECTORIES ==="
+        find custom/ -name "*.tex" | head -20
 
     - name: Prepare Output Directories
       run: |
         echo "=== PREPARATION REPERTOIRES SORTIE ==="
-        
-        # Create output directories that cv.py might expect
-        mkdir -p examples
-        mkdir -p custom/output/fr
         mkdir -p custom/output/en
-        mkdir -p outputs
-        
-        echo "Répertoires créés:"
-        ls -la examples/ || echo "examples/ non créé"
-        ls -la custom/output/ || echo "custom/output/ non créé"
-        ls -la outputs/ || echo "outputs/ non créé"
+        mkdir -p custom/output/fr
+        echo "Created custom output directories"
 
-    - name: Test cv.py Script
+    - name: Compile Custom English CV
       run: |
-        echo "=== TEST SCRIPT cv.py ==="
+        echo "=== COMPILATION CV ANGLAIS ==="
+        cd custom/en
         
-        # Test if cv.py has help or check command
-        echo "Test des commandes disponibles:"
-        python3 cv.py --help || echo "Pas d'aide disponible"
-        python3 cv.py help || echo "Pas de commande help"
-        python3 cv.py check || echo "Pas de commande check"
-        
-        # Show what cv.py does when called without arguments
-        echo "Test cv.py sans arguments:"
-        python3 cv.py || echo "Erreur sans arguments (normal)"
-
-    - name: Enhanced Compilation with Detailed Debugging
-      run: |
-        echo "=== COMPILATION AVEC DEBUG DETAILLE ==="
-        
-        # Run the compilation with error capture
-        echo "Lancement de la compilation..."
-        set +e  # Don't exit on error
-        python3 cv.py build all 2>&1 | tee compilation_output.log
-        COMPILE_EXIT_CODE=$?
-        set -e  # Re-enable exit on error
-        
-        echo "Code de retour: $COMPILE_EXIT_CODE"
-        
-        # Look for generated files in various possible locations
-        echo "=== RECHERCHE FICHIERS GENERES ==="
-        
-        # Search for PDF files
-        echo "Recherche PDFs générés:"
-        find . -name "*.pdf" -type f 2>/dev/null | while read pdf_file; do
-          size=$(stat -c%s "$pdf_file")
-          echo "PDF trouvé: $pdf_file (${size} bytes)"
-        done || echo "Aucun PDF trouvé"
-        
-        # Search for log files
-        echo "Recherche logs LaTeX:"
-        find . -name "*.log" -type f 2>/dev/null | while read log_file; do
-          size=$(stat -c%s "$log_file")
-          echo "LOG trouvé: $log_file (${size} bytes)"
-        done || echo "Aucun log trouvé"
-        
-        # Search for aux files (indicates LaTeX was attempted)
-        echo "Recherche fichiers auxiliaires LaTeX:"
-        find . -name "*.aux" -type f 2>/dev/null | while read aux_file; do
-          echo "AUX trouvé: $aux_file"
-        done || echo "Aucun fichier aux trouvé"
-
-    - name: Analyze LaTeX Compilation Errors
-      if: always()
-      run: |
-        echo "=== ANALYSE DETAILLEE DES ERREURS LaTeX ==="
-        
-        # Find and analyze all .log files
-        find . -name "*.log" -type f | while read log_file; do
-          echo "=== ANALYSE: $log_file ==="
+        # Try to compile resume-en.tex
+        if [ -f "resume-en.tex" ]; then
+          echo "Compiling resume-en.tex..."
+          xelatex -interaction=nonstopmode -output-directory=../output/en resume-en.tex
           
-          if [ -f "$log_file" ]; then
-            file_size=$(stat -c%s "$log_file")
-            echo "Taille du log: $file_size bytes"
-            
-            # Show last 100 lines of the log
-            echo "--- Dernières 100 lignes ---"
-            tail -100 "$log_file"
-            echo "--- Fin du log ---"
-            
-            # Look for specific errors
-            echo "--- Recherche d'erreurs spécifiques ---"
-            
-            # Critical errors
-            if grep -i "emergency stop\|fatal error\|job aborted" "$log_file"; then
-              echo "ERREUR CRITIQUE détectée dans $log_file"
-            fi
-            
-            # File not found errors
-            if grep -i "file.*not found\|can't find file" "$log_file"; then
-              echo "FICHIERS MANQUANTS détectés:"
-              grep -i "file.*not found\|can't find file" "$log_file"
-            fi
-            
-            # Package errors
-            if grep -i "package.*error\|unknown package" "$log_file"; then
-              echo "ERREURS DE PACKAGES détectées:"
-              grep -i "package.*error\|unknown package" "$log_file"
-            fi
-            
-            # Undefined commands
-            if grep -i "undefined control sequence" "$log_file"; then
-              echo "COMMANDES NON DEFINIES détectées:"
-              grep -i -A2 "undefined control sequence" "$log_file"
-            fi
-            
-            # Font errors
-            if grep -i "font.*not found\|font.*error" "$log_file"; then
-              echo "ERREURS DE POLICES détectées:"
-              grep -i "font.*not found\|font.*error" "$log_file"
-            fi
-            
+          # Run twice for references
+          xelatex -interaction=nonstopmode -output-directory=../output/en resume-en.tex
+          
+          if [ -f "../output/en/resume-en.pdf" ]; then
+            size=$(stat -c%s "../output/en/resume-en.pdf")
+            echo "SUCCESS: English CV generated (${size} bytes)"
           else
-            echo "Log file $log_file not accessible"
+            echo "ERROR: Failed to generate English CV"
+            # Show log if exists
+            if [ -f "../output/en/resume-en.log" ]; then
+              echo "=== LAST 50 LINES OF LOG ==="
+              tail -50 "../output/en/resume-en.log"
+            fi
           fi
+        else
+          echo "WARNING: resume-en.tex not found"
+        fi
+
+    - name: Compile Custom French CV
+      run: |
+        echo "=== COMPILATION CV FRANCAIS ==="
+        cd custom/fr
+        
+        # Try to compile resume-fr.tex
+        if [ -f "resume-fr.tex" ]; then
+          echo "Compiling resume-fr.tex..."
+          xelatex -interaction=nonstopmode -output-directory=../output/fr resume-fr.tex
+          xelatex -interaction=nonstopmode -output-directory=../output/fr resume-fr.tex
           
-          echo "=========================="
+          if [ -f "../output/fr/resume-fr.pdf" ]; then
+            size=$(stat -c%s "../output/fr/resume-fr.pdf")
+            echo "SUCCESS: French CV generated (${size} bytes)"
+          else
+            echo "ERROR: Failed to generate French CV"
+            if [ -f "../output/fr/resume-fr.log" ]; then
+              echo "=== LAST 50 LINES OF LOG ==="
+              tail -50 "../output/fr/resume-fr.log"
+            fi
+          fi
+        else
+          echo "WARNING: resume-fr.tex not found"
+        fi
+        
+        # Try to compile cv-fr.tex if it exists
+        if [ -f "cv-fr.tex" ]; then
+          echo "Compiling cv-fr.tex..."
+          xelatex -interaction=nonstopmode -output-directory=../output/fr cv-fr.tex
+          xelatex -interaction=nonstopmode -output-directory=../output/fr cv-fr.tex
+          
+          if [ -f "../output/fr/cv-fr.pdf" ]; then
+            size=$(stat -c%s "../output/fr/cv-fr.pdf")
+            echo "SUCCESS: French CV (cv-fr.tex) generated (${size} bytes)"
+          fi
+        fi
+
+    - name: Check Generated PDFs
+      run: |
+        echo "=== VERIFICATION PDFS GENERES ==="
+        
+        echo "English PDFs:"
+        ls -la custom/output/en/*.pdf 2>/dev/null || echo "No English PDFs generated"
+        
+        echo "French PDFs:"
+        ls -la custom/output/fr/*.pdf 2>/dev/null || echo "No French PDFs generated"
+        
+        echo "All custom PDFs found:"
+        find custom/output/ -name "*.pdf" -type f | while read pdf; do
+          size=$(stat -c%s "$pdf")
+          echo "  $pdf (${size} bytes)"
         done
 
-    - name: Show Working Directory Contents
+    - name: Analyze Compilation Errors
       if: always()
       run: |
-        echo "=== CONTENU FINAL REPERTOIRES ==="
+        echo "=== ANALYSE ERREURS COMPILATION ==="
         
-        echo "Contenu examples/:"
-        ls -la examples/ || echo "examples/ vide ou inexistant"
+        # Check English logs
+        if [ -f "custom/output/en/resume-en.log" ]; then
+          echo "=== LOG ANGLAIS ==="
+          tail -50 "custom/output/en/resume-en.log"
+          
+          # Look for specific errors
+          if grep -q "Undefined control sequence" "custom/output/en/resume-en.log"; then
+            echo "ERROR: Undefined control sequence in English CV"
+            grep -A2 "Undefined control sequence" "custom/output/en/resume-en.log"
+          fi
+          
+          if grep -q "File.*not found" "custom/output/en/resume-en.log"; then
+            echo "ERROR: Missing files in English CV"
+            grep "File.*not found" "custom/output/en/resume-en.log"
+          fi
+        fi
         
-        echo "Contenu custom/:"
-        find custom/ -type f 2>/dev/null | head -20 || echo "custom/ vide ou inexistant"
-        
-        echo "Contenu racine (fichiers PDF):"
-        ls -la *.pdf 2>/dev/null || echo "Aucun PDF à la racine"
-        
-        echo "Tous les PDFs dans le repository:"
-        find . -name "*.pdf" -type f | head -10 || echo "Aucun PDF trouvé"
+        # Check French logs
+        for log_file in "custom/output/fr/resume-fr.log" "custom/output/fr/cv-fr.log"; do
+          if [ -f "$log_file" ]; then
+            echo "=== LOG FRANCAIS: $(basename "$log_file") ==="
+            tail -50 "$log_file"
+            
+            if grep -q "Undefined control sequence" "$log_file"; then
+              echo "ERROR: Undefined control sequence in French CV"
+              grep -A2 "Undefined control sequence" "$log_file"
+            fi
+            
+            if grep -q "File.*not found" "$log_file"; then
+              echo "ERROR: Missing files in French CV"
+              grep "File.*not found" "$log_file"
+            fi
+          fi
+        done
+
+    - name: Upload Custom PDFs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: custom-cv-pdfs
+        path: |
+          custom/output/**/*.pdf
+        retention-days: 30
 
     - name: Upload Compilation Logs
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: compilation-logs-debug
+        name: custom-compilation-logs
         path: |
-          **/*.log
-          compilation_output.log
-          **/*.aux
-          **/*.fls
-          **/*.fdb_latexmk
+          custom/output/**/*.log
+          custom/output/**/*.aux
         retention-days: 7
 
-    - name: Upload Generated PDFs
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: generated-pdfs
-        path: |
-          examples/*.pdf
-          **/*.pdf
-        retention-days: 30
-
-    - name: Final Summary
+    - name: Build Summary
       if: always()
       run: |
-        echo "=== RESUME FINAL ==="
+        echo "=== RESUME COMPILATION CUSTOM CVs ==="
         
-        # Count PDFs found
-        PDF_COUNT=$(find . -name "*.pdf" -type f | wc -l)
-        LOG_COUNT=$(find . -name "*.log" -type f | wc -l)
+        # Count generated PDFs
+        PDF_COUNT=0
+        EN_PDFS=0
+        FR_PDFS=0
         
-        echo "PDFs générés: $PDF_COUNT"
-        echo "Logs LaTeX générés: $LOG_COUNT"
-        
-        if [ "$PDF_COUNT" -gt 0 ]; then
-          echo "SUCCESS: Au moins un PDF a été généré"
-          find . -name "*.pdf" -type f | while read pdf; do
-            size=$(stat -c%s "$pdf")
-            echo "  - $pdf (${size} bytes)"
-          done
-        else
-          echo "ECHEC: Aucun PDF généré"
-          echo "Vérifiez les logs de compilation dans les artefacts"
+        if ls custom/output/en/*.pdf 1> /dev/null 2>&1; then
+          EN_PDFS=$(ls custom/output/en/*.pdf | wc -l)
+          PDF_COUNT=$((PDF_COUNT + EN_PDFS))
         fi
         
-        # Summary for GitHub
-        echo "## Résultat de Compilation" >> $GITHUB_STEP_SUMMARY
+        if ls custom/output/fr/*.pdf 1> /dev/null 2>&1; then
+          FR_PDFS=$(ls custom/output/fr/*.pdf | wc -l)  
+          PDF_COUNT=$((PDF_COUNT + FR_PDFS))
+        fi
+        
+        echo "Total PDFs generated: $PDF_COUNT"
+        echo "English PDFs: $EN_PDFS"
+        echo "French PDFs: $FR_PDFS"
+        
+        # Create GitHub summary
+        echo "## Custom CV Compilation Results" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**PDFs générés:** $PDF_COUNT" >> $GITHUB_STEP_SUMMARY
-        echo "**Logs disponibles:** $LOG_COUNT" >> $GITHUB_STEP_SUMMARY
+        echo "**Total PDFs Generated:** $PDF_COUNT" >> $GITHUB_STEP_SUMMARY
+        echo "**English CVs:** $EN_PDFS" >> $GITHUB_STEP_SUMMARY  
+        echo "**French CVs:** $FR_PDFS" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
         if [ "$PDF_COUNT" -gt 0 ]; then
-          echo "**Status:** SUCCESS - PDFs générés avec succès" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** SUCCESS" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Fichiers générés:**" >> $GITHUB_STEP_SUMMARY
-          find . -name "*.pdf" -type f | while read pdf; do
+          echo "**Generated Files:**" >> $GITHUB_STEP_SUMMARY
+          
+          find custom/output/ -name "*.pdf" -type f | while read pdf; do
             size=$(stat -c%s "$pdf")
             echo "- \`$pdf\` (${size} bytes)" >> $GITHUB_STEP_SUMMARY
           done
         else
-          echo "**Status:** FAILED - Aucun PDF généré" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** FAILED - No PDFs generated" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Consultez les artefacts 'compilation-logs-debug' pour plus de détails." >> $GITHUB_STEP_SUMMARY
+          echo "Check the 'custom-compilation-logs' artifact for details." >> $GITHUB_STEP_SUMMARY
         fi
         
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Artifacts:**" >> $GITHUB_STEP_SUMMARY
+        echo "- \`custom-cv-pdfs\`: Generated PDF files" >> $GITHUB_STEP_SUMMARY
+        echo "- \`custom-compilation-logs\`: LaTeX compilation logs" >> $GITHUB_STEP_SUMMARY
