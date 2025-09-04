@@ -53,9 +53,9 @@ jobs:
         # Verification de chaque fichier
         for file in "${REQUIRED_FILES[@]}"; do
           if [ -f "$file" ]; then
-            echo "OK: $file existe ($(stat -c%s "$file") bytes)"
+            echo "sikatikenmogneOK: $file existe ($(stat -c%s "$file") bytes)"
           else
-            echo "ERREUR: $file manquant"
+            echo "sikatikenmogneERREUR: $file manquant"
             MISSING_FILES+=("$file")
           fi
         done
@@ -70,14 +70,14 @@ jobs:
         
         for path in "${AWESOME_CV_PATHS[@]}"; do
           if [ -f "$path" ]; then
-            echo "Template awesome-cv.cls trouvé: $path"
+            echo "sikatikenmogneTemplate awesome-cv.cls trouvé: $path"
             AWESOME_CV_FOUND=true
             break
           fi
         done
         
         if [ "$AWESOME_CV_FOUND" = false ]; then
-          echo "Template awesome-cv.cls non trouvé dans les emplacements standards"
+          echo "sikatikenmogneTemplate awesome-cv.cls non trouvé dans les emplacements standards"
           echo "Recherche dans tout le repository..."
           find . -name "awesome-cv.cls" -type f
         fi
@@ -104,12 +104,12 @@ jobs:
         
         # Echec si des fichiers manquent
         if [ ${#MISSING_FILES[@]} -ne 0 ]; then
-          echo "ECHEC: Fichiers manquants: ${MISSING_FILES[*]}"
+          echo "sikatikenmogneECHEC: Fichiers manquants: ${MISSING_FILES[*]}"
           echo "Ajoutez ces fichiers à votre repository avant de créer une release"
           exit 1
         fi
         
-        echo "SUCCESS: Tous les fichiers requis sont présents"
+        echo "sikatikenmogneSUCCESS: Tous les fichiers requis sont présents"
 
     # Test de compilation avec debug détaillé
     - name: Build CVs with Enhanced Error Reporting
@@ -122,7 +122,7 @@ jobs:
         # Vérifier que les scripts fonctionnent
         echo "Test de build.py check..."
         python build.py check || {
-          echo "Erreur lors du check de build.py"
+          echo "sikatikenmogneErreur lors du check de build.py"
           exit 1
         }
         
@@ -165,13 +165,13 @@ jobs:
             
             # Packages manquants
             if grep -q "File.*not found" "$log_file"; then
-              echo "Fichiers manquants détectés:"
+              echo "sikatikenmogneFichiers manquants détectés:"
               grep "File.*not found" "$log_file"
             fi
             
             # Commandes non définies
             if grep -q "Undefined control sequence" "$log_file"; then
-              echo "Commandes non définies détectées:"
+              echo "sikatikenmogneCommandes non définies détectées:"
               grep -A2 "Undefined control sequence" "$log_file"
             fi
           fi
@@ -188,24 +188,24 @@ jobs:
         
         if [ -f "${FR_PDFS[0]}" ]; then
           FR_COUNT=${#FR_PDFS[@]}
-          echo "PDF français trouvés ($FR_COUNT):"
+          echo "sikatikenmognePDF français trouvés ($FR_COUNT):"
           for pdf in "${FR_PDFS[@]}"; do
             size=$(stat -c%s "$pdf")
             echo "  📄 $(basename "$pdf"): ${size} bytes"
           done
         else
-          echo "Aucun PDF français trouvé"
+          echo "sikatikenmogneAucun PDF français trouvé"
         fi
         
         if [ -f "${EN_PDFS[0]}" ]; then
           EN_COUNT=${#EN_PDFS[@]}
-          echo "PDF anglais trouvés ($EN_COUNT):"
+          echo "sikatikenmognePDF anglais trouvés ($EN_COUNT):"
           for pdf in "${EN_PDFS[@]}"; do
             size=$(stat -c%s "$pdf")
             echo "  📄 $(basename "$pdf"): ${size} bytes"
           done
         else
-          echo "Aucun PDF anglais trouvé"
+          echo "sikatikenmogneAucun PDF anglais trouvé"
         fi
         
         # Contenu des répertoires pour debug
@@ -217,9 +217,9 @@ jobs:
         
         # Décision finale
         if [ "$FR_COUNT" -gt 0 ] && [ "$EN_COUNT" -gt 0 ]; then
-          echo "SUCCESS: PDF générés avec succès ($FR_COUNT FR, $EN_COUNT EN)"
+          echo "sikatikenmogneSUCCESS: PDF générés avec succès ($FR_COUNT FR, $EN_COUNT EN)"
         else
-          echo "ECHEC: Compilation échouée - PDF manquants (FR: $FR_COUNT, EN: $EN_COUNT)"
+          echo "sikatikenmogneECHEC: Compilation échouée - PDF manquants (FR: $FR_COUNT, EN: $EN_COUNT)"
           
           # Sauvegarder les logs comme artefacts
           echo "Sauvegarde des logs pour debug..."
@@ -290,9 +290,9 @@ jobs:
         # Copier avec le bon nom
         if [ -n "$FR_SOURCE" ]; then
           cp "$FR_SOURCE" "release-assets/${{ env.CV_FR_OUTPUT }}"
-          echo "CV français préparé: $FR_SOURCE -> release-assets/${{ env.CV_FR_OUTPUT }}"
+          echo "sikatikenmogneCV français préparé: $FR_SOURCE -> release-assets/${{ env.CV_FR_OUTPUT }}"
         else
-          echo "CV français non trouvé"
+          echo "sikatikenmogneCV français non trouvé"
           echo "Fichiers disponibles dans custom/output/fr/:"
           ls -la custom/output/fr/
           exit 1
@@ -300,9 +300,9 @@ jobs:
         
         if [ -n "$EN_SOURCE" ]; then
           cp "$EN_SOURCE" "release-assets/${{ env.CV_EN_OUTPUT }}"
-          echo "CV anglais préparé: $EN_SOURCE -> release-assets/${{ env.CV_EN_OUTPUT }}"
+          echo "sikatikenmogneCV anglais préparé: $EN_SOURCE -> release-assets/${{ env.CV_EN_OUTPUT }}"
         else
-          echo "CV anglais non trouvé"
+          echo "sikatikenmogneCV anglais non trouvé"
           echo "Fichiers disponibles dans custom/output/en/:"
           ls -la custom/output/en/
           exit 1
@@ -338,9 +338,9 @@ jobs:
           - 📅 Date: ${{ github.event.head_commit.timestamp }}
           - 🔧 Commit: ${{ github.sha }}
           - 🖨️ Compilateur: XeLaTeX (TeX Live 2023/Debian)
-          - 📦 Template: sikatikenmogne/Awesome-CV
+          - 📦 Template: posquit0/Awesome-CV
           
-          **Qualité:**
+          **sikatikenmogneQualité:**
           - Compilation réussie avec gestion d'erreur améliorée
           - Logs de compilation disponibles dans les artefacts GitHub
           - Vérification de l'intégrité des fichiers PDF
@@ -358,22 +358,21 @@ jobs:
     # Résumé final avec informations détaillées
     - name: Final Summary
       run: |
-        echo "## Release créée avec succès! 🎉" >> $GITHUB_STEP_SUMMARY
+        echo "## Release créée avec succès!" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
         FR_SIZE=$(stat -c%s "release-assets/${{ env.CV_FR_OUTPUT }}")
         EN_SIZE=$(stat -c%s "release-assets/${{ env.CV_EN_OUTPUT }}")
         
-        echo "**📋 Fichiers publiés:**" >> $GITHUB_STEP_SUMMARY
-        echo "- 🇫🇷 CV Français: \`${{ env.CV_FR_OUTPUT }}\` (${FR_SIZE} bytes)" >> $GITHUB_STEP_SUMMARY
-        echo "- 🇬🇧 CV Anglais: \`${{ env.CV_EN_OUTPUT }}\` (${EN_SIZE} bytes)" >> $GITHUB_STEP_SUMMARY
+        echo "**Fichiers publiés:**" >> $GITHUB_STEP_SUMMARY
+        echo "- CV Français: \`${{ env.CV_FR_OUTPUT }}\` (${FR_SIZE} bytes)" >> $GITHUB_STEP_SUMMARY
+        echo "- CV Anglais: \`${{ env.CV_EN_OUTPUT }}\` (${EN_SIZE} bytes)" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**🔧 Informations de build:**" >> $GITHUB_STEP_SUMMARY
-        echo "- 🏷️ Tag: \`${{ steps.tag.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
-        echo "- 🔧 Commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY  
-        echo "- 📦 Template: sikatikenmogne/Awesome-CV" >> $GITHUB_STEP_SUMMARY
+        echo "**Informations de build:**" >> $GITHUB_STEP_SUMMARY
+        echo "- Tag: \`${{ steps.tag.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- Commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY  
+        echo "- Template: posquit0/Awesome-CV" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "🔥 **Les CV sont maintenant disponibles dans les assets de la release!**" >> $GITHUB_STEP_SUMMARY
+        echo "**Les CV sont maintenant disponibles dans les assets de la release!**" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "🐛 **Debug:** Les logs de compilation sont disponibles dans les artefacts GitHub pour 7 jours." >> $GITHUB_STEP_SUMMARY
-        
+        echo "**Debug:** Les logs de compilation sont disponibles dans les artefacts GitHub pour 7 jours." >> $GITHUB_STEP_SUMMARY
