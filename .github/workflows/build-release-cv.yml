@@ -32,8 +32,8 @@ jobs:
     - name: Setup LaTeX
       run: |
         echo "=== INSTALLATION PACKAGES LaTeX ==="
-        sudo apt-get update
-        sudo apt-get install -y \
+        apt-get update
+        apt-get install -y \
           texlive-xetex \
           texlive-fonts-recommended \
           texlive-fonts-extra \
@@ -82,7 +82,7 @@ jobs:
         # Structure du repository
         echo "=== STRUCTURE REPOSITORY ==="
         find . -type f -name "*.tex" -o -name "*.cls" | sort | head -20
-        
+
         echo "SUCCESS: Tous les fichiers requis sont presents"
       shell: bash
 
