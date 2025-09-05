@@ -13,6 +13,7 @@ env:
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
+    container: texlive/texlive:latest
     
     steps:
     # Checkout du code
@@ -30,6 +31,7 @@ jobs:
     # Setup LaTeX avec packages complets
     - name: Setup LaTeX
       run: |
+        echo "=== INSTALLATION PACKAGES LaTeX ==="
         sudo apt-get update
         sudo apt-get install -y \
           texlive-xetex \
@@ -40,8 +42,14 @@ jobs:
           texlive-luatex \
           fonts-font-awesome \
           fontconfig \
+          python3-pip \
+          file \
           ghostscript \
           poppler-utils
+        
+        fc-cache -fv
+        echo "LaTeX version:"
+        xelatex --version
       shell: bash
 
     # Verification des fichiers requis
