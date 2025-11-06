@@ -1,0 +1,161 @@
+%!TEX TS-program = xelatex
+%!TEX encoding = UTF-8 Unicode
+% Awesome CV LaTeX Template for Cover Letter
+%
+% This template has been downloaded from:
+% \url{https://github.com/posquit0/Awesome-CV}
+%
+% Authors:
+% Claud D. Park <posquit0.bj@gmail.com>
+% Lars Richter <mail@ayeks.de>
+%
+% Template license:
+% CC BY-SA 4.0 (\url{https://creativecommons.org/licenses/by-sa/4.0/)}
+%
+
+
+%-------------------------------------------------------------------------------
+% CONFIGURATIONS
+%-------------------------------------------------------------------------------
+% A4 paper size by default, use 'letterpaper' for US letter
+\documentclass[11pt, a4paper]{../../../awesome-cv}
+
+% Configure page margins with geometry
+% \geometry{left=1cm, top=.8cm, right=1cm, bottom=2.25cm, footskip=.25cm}
+\geometry{left=1cm, top=.8cm, right=1cm, bottom=1.80cm, footskip=.25cm}
+
+% Specify the location of the included fonts
+\fontdir[fonts/]
+
+% Color for highlights
+% Awesome Colors: awesome-emerald, awesome-skyblue, awesome-red, awesome-pink, awesome-orange
+%                 awesome-nephritis, awesome-concrete, awesome-darknight
+\colorlet{awesome}{awesome-skyblue}
+% Uncomment if you would like to specify your own color
+% \definecolor{awesome}{HTML}{CA63A8}
+
+% Colors for text
+% Uncomment if you would like to specify your own color
+\definecolor{darktext}{HTML}{414141}
+\definecolor{text}{HTML}{333333}
+\definecolor{graytext}{HTML}{5D5D5D}
+\definecolor{lighttext}{HTML}{999999}
+
+% Set false if you don't want to highlight section with awesome color
+\setbool{acvSectionColorHighlight}{true}
+
+% If you would like to change the social information separator from a pipe (|) to something else
+\renewcommand{\acvHeaderSocialSep}{\quad\textbar\quad}
+
+% Configuration pour les dates en français
+\usepackage[french]{babel}
+\usepackage[useregional]{datetime2}
+
+% Configuration de l'interligne à 1,5
+\usepackage{setspace}
+\setstretch{1}  % Définit l'interligne à 1,15
+% Configuration pour l'indentation des paragraphes
+
+%-------------------------------------------------------------------------------
+%	PERSONAL INFORMATION
+%	Comment any of the lines below if they are not required
+%-------------------------------------------------------------------------------
+% Available options: circle|rectangle,edge/noedge,left/right
+% \photo[circle,noedge,left]{./profile}
+\name{\textbf{Samuel}}{\textbf{SIKATI KENMOGNE}}
+\position{Ingénieur logiciel{\enskip\cdotp\enskip}Développeur web fullstack}
+\address{Douala ~·~ Yaoundé, Cameroun}
+
+\mobile{(+237) 657407989}
+\email{sikatikenmogne@gmail.com}
+\homepage{linktr.ee/samuelsikati}
+\github{sikatikenmogne}
+\linkedin{samuel-sikati-kenmogne-57953a1b7}
+% \gitlab{gitlab-id}
+% \stackoverflow{SO-id}{SO-name}
+% \twitter{@twit}
+% \skype{skype-id}
+% \reddit{reddit-id}
+% \medium{madium-id}
+% \googlescholar{googlescholar-id}{name-to-display}
+%% \firstname and \lastname will be used
+% \googlescholar{googlescholar-id}{}
+% \extrainfo{extra informations}
+
+% \quote{``Be the change that you want to see in the world."}
+
+
+%-------------------------------------------------------------------------------
+%	LETTER INFORMATION
+%	All of the below lines must be filled out
+%-------------------------------------------------------------------------------
+% The company being applied to
+\recipient
+  {À l'attention du Directeur Général}
+  {Cible RH\\Douala, Akwa\\Cameroun}
+% The date on the letter, default is the date of compilation
+\letterdate{Douala, le 28 octobre 2025.}
+% The title of the letter
+% \lettertitle{Candidature spontanée - Ingénieur Logiciel}
+
+% \vspace{3cm} % Add vertical space here
+% How the letter is opened
+% \letteropening{Madame, Monsieur,}
+% How the letter is closed
+% \letterclosing{Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.}
+% Any enclosures with the letter
+\letterenclosure[Pièces Jointes]{Curriculum Vitae}
+
+
+%-------------------------------------------------------------------------------
+\begin{document}
+
+% Print the header with above personal informations
+% Give optional argument to change alignment(C: center, L: left, R: right)
+\makecvheader[L]
+
+% Print the footer with 3 arguments(<left>, <center>, <right>)
+% Leave any of these blank if they are not needed
+\makecvfooter{} {SIKATI KENMOGNE Samuel~~~·~~~Demande d'emploi} {}
+% \makecvfooterqrlinksize[1.5cm]{}{SIKATI KENMOGNE Samuel~~~·~~~Lettre de motivation}{https://linktr.ee/samuelsikati}{samuelsikati.png}
+% QR Code
+\qroverlay[
+    x=0.114\paperwidth,
+    y=0.955\paperheight,
+    size=1.4cm,
+    text={},
+    textsize=\tiny,
+    textcolor=gray
+]{../../../samuelsikati.png}{https://linktr.ee/samuelsikati}
+
+% Print the title with above letter informations
+\makelettertitle
+
+%-------------------------------------------------------------------------------
+%	LETTER CONTENT
+%-------------------------------------------------------------------------------
+\begin{cvletter}
+
+\lettersection{Objet : Demande d'emploi - Ingénieur Logiciel / Missions d'intérim}
+
+
+Monsieur le Directeur,
+
+\setlength{\parindent}{2em}  % Définit la taille de l'indentation (ajustable)
+
+\indent Titulaire d'un Master en Ingénierie Informatique spécialisé en Génie Logiciel de l'Institut UCAC-ICAM et d'une Licence en Informatique de l'Institut Africain d'Informatique (IAI), j'ai l'honneur de vous présenter ma candidature en vue d'intégrer votre réseau de talents, que ce soit pour des missions d'intérim ou pour vos besoins internes. Votre expertise reconnue dans le placement de profils qualifiés et votre compréhension des enjeux de qualité logicielle des entreprises camerounaises font de Cible RH un partenaire stratégique idéal pour accompagner mon évolution professionnelle.
+
+\indent Mon parcours professionnel reflète une attention constante à la qualité et à la conformité des solutions logicielles. Chez Société Générale Cameroun, j'ai développé un système de gestion des anomalies bancaires intégrant des mécanismes rigoureux de traçabilité et de réduction des erreurs manuelles de 35\%, garantissant ainsi la fiabilité des processus opérationnels critiques. Mes missions chez PERENCO RIO DEL REY m'ont particulièrement sensibilisé aux exigences QHSE, où j'ai optimisé les processus de contrôle qualité et amélioré l'efficacité des audits de 20\%. Cette expérience m'a permis de développer une vision holistique de la qualité, alliant conformité réglementaire et excellence opérationnelle. Ma maîtrise technique du développement fullstack (backend : .NET Core, Spring Boot, Django ; frontend : React, JavaScript/TypeScript ; DevOps : Docker, Git, SonarQube, Jenkins) me permet d'appréhender les enjeux qualité à tous les niveaux de l'architecture logicielle.
+
+\indent Mon profil combine rigueur méthodologique et agilité opérationnelle. Ma certification Scrum Fundamentals et ma connaissance des principes SOLID et de la Clean Architecture témoignent de mon engagement pour les bonnes pratiques du génie logiciel. Ma capacité à documenter, tester et valider des solutions complexes, couplée à mon expérience avec des outils d'analyse de code comme SonarQube, me permet de contribuer efficacement à l'amélioration continue de la qualité logicielle. Convaincu de pouvoir apporter une valeur ajoutée significative par mon approche rigoureuse et ma vision qualité, je reste à votre disposition pour échanger sur les opportunités correspondant à mon profil.
+
+Dans l'attente d'une suite favorable à ma candidature, je vous prie d'agréer, Monsieur le Directeur Général, l'expression de mes salutations distinguées.
+
+\end{cvletter}
+
+%-------------------------------------------------------------------------------
+% Print the signature and enclosures with above letter informations
+\makeletterclosing
+
+
+\end{document}
